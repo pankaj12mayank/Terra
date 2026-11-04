@@ -1,0 +1,25 @@
+{
+  "admin_passkey": "admin123",
+  "policy": {
+    "ttl_hours": 24,
+    "max_rows": 500,
+    "max_jobs_per_day": 5,
+    "max_storage_mb": 200,
+    "bot_check": true,
+    "recovery_links": true,
+    "auto_purge": true
+  },
+  "defaults": {
+    "width": 1920,
+    "quality": 85,
+    "concurrency": 5,
+    "retry_count": 2,
+    "presets": {
+      "travel": true,
+      "products": true,
+      "blog": true,
+      "social": true
+    }
+  }
+}
+

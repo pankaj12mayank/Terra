@@ -1,0 +1,1938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Terra Image Studio - Multipurpose Image Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #F4F6F9;
+      --surf: #FFFFFF;
+      --surf2: #EAEEF4;
+      --line: #D5DCE6;
+      --fg: #0D1117;
+      --mut: #4A5568;
+      --acc: #1D4ED8;
+      --accfg: #FFFFFF;
+      --acc2: #0B7A75;
+      --ok: #157347;
+      --warn: #B45309;
+      --bad: #B42318;
+      --badfg: #FFFFFF;
+      --ring: rgba(29,78,216,.22);
+      --sb: #0A0E14;
+      --shadow: 0 1px 2px rgba(13,17,23,.06),0 10px 28px -10px rgba(13,17,23,.10);
+      --shadow-h: 0 18px 40px -14px rgba(13,17,23,.28);
+    }
+    [data-theme="dark"] {
+      --bg: #0A0E14;
+      --surf: #121821;
+      --surf2: #1A212C;
+      --line: #28313F;
+      --fg: #EAF0F8;
+      --mut: #9AA7B8;
+      --acc: #7AA2FF;
+      --accfg: #0A1330;
+      --acc2: #3DC9C2;
+      --ok: #4ADE80;
+      --warn: #FBBF24;
+      --bad: #F87171;
+      --badfg: #0A0E14;
+      --ring: rgba(122,162,255,.3);
+      --sb: #070A0E;
+      --shadow: 0 1px 2px rgba(0,0,0,.35),0 10px 28px -10px rgba(0,0,0,.5);
+      --shadow-h: 0 18px 40px -14px rgba(0,0,0,.7);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    h1, h2, h3, .disp { font-family: 'Bricolage Grotesque', sans-serif; letter-spacing: -0.025em; }
+    .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+    button, input, textarea, select { font-family: inherit; }
+    button { cursor: pointer; border: 0; }
+    a { color: inherit; text-decoration: none; }
+    
+    .tr-btn { transition: transform .18s, box-shadow .18s, border-color .18s, color .18s, background .18s; }
+    .tr-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 22px -10px var(--acc); }
+    .tr-btn:active { transform: translateY(0); }
+    .tr-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+    .tr-ghost:hover { border-color: var(--acc); color: var(--acc); }
+    .tr-card { transition: transform .28s cubic-bezier(.2,.8,.2,1), box-shadow .28s, border-color .28s; }
+    .tr-card:hover { transform: translateY(-4px); border-color: var(--acc); box-shadow: var(--shadow-h); }
+    .tr-row { transition: background .15s; }
+    .tr-row:hover { background: var(--surf2); }
+    .tr-in { transition: border-color .15s, box-shadow .15s; }
+    .tr-in:focus { outline: none; border-color: var(--acc); box-shadow: 0 0 0 3px var(--ring); }
+    :focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
+    input[type=range] { accent-color: var(--acc); width: 100%; min-height: 38px; cursor: pointer; }
+    
+    .tr-drop { transition: border-color .2s, background .2s; }
+    .tr-drop:hover { border-color: var(--acc); background: var(--surf2); }
+    
+    .tr-tile { animation: tr-in .4s cubic-bezier(.2,.8,.2,1) both; transition: transform .25s, box-shadow .25s; }
+    .tr-tile:hover { transform: translateY(-4px); box-shadow: var(--shadow-h); }
+    .tr-skel { background: linear-gradient(90deg, var(--surf2), var(--line), var(--surf2)); background-size: 200% 100%; animation: tr-shim 1.4s linear infinite; }
+    .tr-prog { background: repeating-linear-gradient(45deg, var(--acc), var(--acc) 10px, var(--acc2) 10px, var(--acc2) 20px); background-size: 28px 28px; animation: tr-stripe 1s linear infinite; }
+    .tr-live { animation: tr-pulse 2s infinite; }
+    
+    @keyframes tr-in { from { opacity: 0; transform: scale(.94) translateY(10px); } to { opacity: 1; transform: none; } }
+    @keyframes tr-shim { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+    @keyframes tr-stripe { from { background-position: 0 0; } to { background-position: 28px 0; } }
+    @keyframes tr-pulse { 0% { box-shadow: 0 0 0 0 var(--ok); } 70% { box-shadow: 0 0 0 8px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+    @keyframes tr-toast { from { opacity: 0; transform: translateY(14px) scale(.96); } to { opacity: 1; transform: none; } }
+    @keyframes tr-pop { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: none; } }
+    @keyframes tr-ov { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes tr-view { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+    
+    .tr-toast { animation: tr-toast .35s cubic-bezier(.2,.8,.2,1) both; }
+    .tr-modal { animation: tr-pop .3s cubic-bezier(.2,.8,.2,1) both; }
+    .tr-ovl { animation: tr-ov .2s both; }
+    .tr-view { animation: tr-view .4s cubic-bezier(.2,.8,.2,1) both; }
+    
+    /* 3D bar chart */
+    .tr-bar { position: relative; width: 38px; background: var(--c); animation: tr-rise 1.2s cubic-bezier(.2,.8,.2,1) var(--d) both; transition: filter .2s, transform .2s; }
+    .tr-bar:hover { filter: brightness(1.15); transform: translateY(-6px); }
+    .tr-bt { position: absolute; left: 0; bottom: 100%; width: 100%; height: 14px; background: var(--c); filter: brightness(1.25); transform-origin: bottom left; transform: skewX(-45deg); }
+    .tr-bs { position: absolute; left: 100%; top: 0; width: 14px; height: 100%; background: var(--c); filter: brightness(.7); transform-origin: top left; transform: skewY(-45deg); }
+    @keyframes tr-rise { from { height: 0; } to { height: var(--h); } }
+    
+    /* Nav Pill buttons */
+    .nav-tab { padding: 8px 16px; border-radius: 999px; font-weight: 700; font-size: 13px; transition: all .2s; color: var(--mut); background: transparent; }
+    .nav-tab.active { background: var(--acc); color: var(--accfg); }
+    
+    /* Hide view */
+    .view-container { display: none; }
+    .view-container.active { display: block; }
+    
+    @media (max-width: 900px) {
+      .grid-responsive { flex-direction: column !important; }
+      .admin-layout { flex-direction: column !important; }
+      .admin-sidebar { width: 100% !important; border-right: 0 !important; border-bottom: 1px solid var(--line) !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header style="border-bottom: 1px solid var(--line); background: var(--bg); position: sticky; top: 0; z-index: 40;">
+    <div style="max-width: 1400px; margin: 0 auto; padding: 12px 24px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px;">
+      
+      <!-- Brand & View Switcher -->
+      <div style="display: flex; align-items: center; gap: 20px;">
+        <a href="#workspace" onclick="switchView('workspace'); return false;" style="display: flex; align-items: center; gap: 10px;" aria-label="Terra home">
+          <svg width="34" height="34" viewBox="0 0 40 40" aria-hidden="true">
+            <rect width="40" height="40" rx="11" fill="var(--acc)"></rect>
+            <circle cx="20" cy="20" r="9.5" fill="none" stroke="var(--accfg)" stroke-width="2.4"></circle>
+            <ellipse cx="20" cy="20" rx="4" ry="9.5" fill="none" stroke="var(--accfg)" stroke-width="2"></ellipse>
+            <path d="M10.5 20h19" stroke="var(--accfg)" stroke-width="2"></path>
+          </svg>
+          <span class="disp" style="font-weight: 800; font-size: 22px; letter-spacing: -0.03em;">Terra</span>
+        </a>
+        
+        <nav style="display: flex; gap: 4px; padding: 3px; border-radius: 999px; background: var(--surf2); border: 1px solid var(--line);">
+          <button id="nav-workspace" class="nav-tab active" onclick="switchView('workspace')">Workspace</button>
+          <button id="nav-landing" class="nav-tab" onclick="switchView('landing')">Showcase</button>
+          <button id="nav-admin" class="nav-tab" onclick="switchView('admin')">Admin</button>
+        </nav>
+      </div>
+
+      <!-- Right Controls: Status, Guest Session, Theme Toggle -->
+      <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; position: relative;">
+        <div class="mono" style="font-size: 12px; color: var(--mut); padding: 0 4px;" id="header-quota-text">
+          Storage <span id="storage-used-txt">0 MB</span> / Jobs today <span id="jobs-today-txt">0</span> of 5
+        </div>
+
+        <!-- Session Chip & Dropdown -->
+        <div style="position: relative;">
+          <button class="tr-btn tr-ghost" id="session-btn" onclick="toggleSessionMenu()" aria-haspopup="menu" aria-expanded="false" style="display: flex; align-items: center; gap: 10px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surf); color: var(--fg); min-height: 42px;">
+            <span class="tr-live" style="width: 8px; height: 8px; border-radius: 50%; background: var(--ok);"></span>
+            <span style="font-size: 13px; font-weight: 700;">Guest session</span>
+            <span class="mono" id="session-countdown" style="font-size: 12px; color: var(--mut);">24h 00m</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M6 9l6 6 6-6"></path></svg>
+          </button>
+
+          <!-- Dropdown Menu -->
+          <div id="session-menu" class="tr-modal" role="menu" style="display: none; position: absolute; right: 0; top: calc(100% + 8px); z-index: 50; width: 280px; padding: 10px; border: 1px solid var(--line); border-radius: 16px; background: var(--surf); box-shadow: var(--shadow-h);">
+            <div style="padding: 8px 10px; border-bottom: 1px solid var(--line); margin-bottom: 6px;">
+              <div style="font-weight: 700; font-size: 14px;">Private to this browser</div>
+              <div class="mono" id="session-masked-id" style="font-size: 12px; color: var(--mut); margin-top: 3px;">session ...</div>
+            </div>
+            <button class="tr-row" onclick="copyRecoveryLink()" style="display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; padding: 10px 12px; border: 0; border-radius: 10px; background: transparent; color: var(--fg); font-size: 13px; font-weight: 600;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+              Copy recovery link
+            </button>
+            <button class="tr-row" onclick="extendSessionAction()" style="display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; padding: 10px 12px; border: 0; border-radius: 10px; background: transparent; color: var(--fg); font-size: 13px; font-weight: 600;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              Extend by 24 hours
+            </button>
+            <button class="tr-row" onclick="openDeleteModal()" style="display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; padding: 10px 12px; border: 0; border-radius: 10px; background: transparent; color: var(--bad); font-size: 13px; font-weight: 700;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              Delete my data
+            </button>
+          </div>
+        </div>
+
+        <!-- Theme Toggle -->
+        <button class="tr-btn tr-ghost" onclick="toggleTheme()" aria-label="Toggle theme" style="width: 42px; height: 42px; border-radius: 12px; border: 1px solid var(--line); background: var(--surf); color: var(--fg); display: flex; align-items: center; justify-content: center;">
+          <svg id="theme-icon-sun" style="display: none;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
+          <svg id="theme-icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ======================================================== -->
+  <!-- VIEW 1: GUEST WORKSPACE                                  -->
+  <!-- ======================================================== -->
+  <main id="view-workspace" class="view-container active tr-view" style="max-width: 1400px; margin: 0 auto; padding: 24px 24px 64px; width: 100%;">
+    
+    <!-- Stepper Pills -->
+    <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 24px;" id="stepper-bar">
+      <div class="step-pill" style="display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--ok); background: var(--surf); color: var(--fg); font-size: 13px; font-weight: 700;">
+        <span class="mono" style="font-size: 12px; color: var(--ok);">1</span> Input list
+      </div>
+      <div class="step-pill" style="display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--ok); background: var(--surf); color: var(--fg); font-size: 13px; font-weight: 700;">
+        <span class="mono" style="font-size: 12px; color: var(--ok);">2</span> Preset & Sizing
+      </div>
+      <div class="step-pill" style="display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--acc); background: var(--surf); color: var(--fg); font-size: 13px; font-weight: 700;">
+        <span class="mono" style="font-size: 12px; color: var(--acc);">3</span> Smart Pipeline
+      </div>
+      <div class="step-pill" style="display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--surf2); color: var(--mut); font-size: 13px; font-weight: 700;">
+        <span class="mono" style="font-size: 12px;">4</span> Interactive Review
+      </div>
+      <div class="step-pill" style="display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--surf2); color: var(--mut); font-size: 13px; font-weight: 700;">
+        <span class="mono" style="font-size: 12px;">5</span> ZIP Export
+      </div>
+    </div>
+
+    <!-- Main Two-Column Layout -->
+    <div class="grid-responsive" style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start;">
+      
+      <!-- LEFT COLUMN: INPUT + SETTINGS -->
+      <div style="flex: 1 1 420px; max-width: 100%; min-width: 0; display: flex; flex-direction: column; gap: 20px;">
+        
+        <!-- CARD 1: INPUT LIST -->
+        <div style="padding: 22px; border: 1px solid var(--line); border-radius: 20px; background: var(--surf); box-shadow: var(--shadow);">
+          <h2 style="margin: 0 0 14px; font-size: 20px; font-weight: 700;">1. Your list</h2>
+          
+          <!-- Tabs: Upload CSV / Paste list / Add one -->
+          <div style="display: flex; padding: 4px; gap: 4px; border: 1px solid var(--line); border-radius: 14px; background: var(--surf2);">
+            <button id="tab-btn-upload" onclick="switchInputTab('upload')" style="flex: 1; padding: 9px 6px; border-radius: 10px; background: var(--surf); color: var(--fg); font-weight: 700; font-size: 13px; min-height: 40px; transition: all .2s; box-shadow: var(--shadow);">Upload CSV</button>
+            <button id="tab-btn-paste" onclick="switchInputTab('paste')" style="flex: 1; padding: 9px 6px; border-radius: 10px; background: transparent; color: var(--mut); font-weight: 700; font-size: 13px; min-height: 40px; transition: all .2s;">Paste list</button>
+            <button id="tab-btn-add" onclick="switchInputTab('add')" style="flex: 1; padding: 9px 6px; border-radius: 10px; background: transparent; color: var(--mut); font-weight: 700; font-size: 13px; min-height: 40px; transition: all .2s;">Add one</button>
+          </div>
+
+          <div style="margin-top: 16px;">
+            <!-- SUBTAB 1: UPLOAD CSV -->
+            <div id="subtab-upload">
+              <input type="file" id="csv-file-input" accept=".csv" style="display: none;" onchange="handleCsvUpload(event)">
+              <div class="tr-drop" onclick="document.getElementById('csv-file-input').click()" style="width: 100%; padding: 26px 16px; border: 2px dashed var(--line); border-radius: 16px; background: transparent; color: var(--fg); display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; text-align: center;">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--acc)" stroke-width="2" stroke-linecap="round"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"></path></svg>
+                <span style="font-weight: 700; font-size: 14px;">Choose or drop a CSV file</span>
+                <span style="font-size: 12px; color: var(--mut);">Accepts Country/Place, Products, Blog titles, or any list. Up to 500 rows.</span>
+              </div>
+              <div style="margin-top: 10px; display: flex; gap: 8px;">
+                <button class="tr-btn tr-ghost" onclick="downloadCsvTemplate()" style="padding: 9px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surf2); color: var(--fg); font-weight: 700; font-size: 13px; min-height: 40px;">Download template</button>
+                <button class="tr-btn tr-ghost" onclick="loadSamplePlaces()" style="padding: 9px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surf2); color: var(--fg); font-weight: 700; font-size: 13px; min-height: 40px;">Load 24 World Wonders</button>
+              </div>
+            </div>
+
+            <!-- SUBTAB 2: PASTE LIST -->
+            <div id="subtab-paste" style="display: none;">
+              <textarea id="paste-textarea" class="tr-in" rows="6" placeholder="India, Taj Mahal&#10;France, Eiffel Tower&#10;Smartphones, iPhone 15&#10;Watches, Chronograph" style="width: 100%; box-sizing: border-box; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); color: var(--fg); font-size: 13px; line-height: 1.5; resize: vertical;"></textarea>
+              <button class="tr-btn" onclick="applyPastedList()" style="margin-top: 10px; padding: 11px 18px; border-radius: 12px; background: var(--acc); color: var(--accfg); font-weight: 700; font-size: 14px;">Apply this list</button>
+            </div>
+
+            <!-- SUBTAB 3: ADD ONE -->
+            <div id="subtab-add" style="display: none;">
+              <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div>
+                  <label style="font-size: 13px; font-weight: 700;">Category or Group (optional)</label>
+                  <input id="add-c-input" class="tr-in" placeholder="e.g. Travel, Electronics, Nature" style="margin-top: 6px; width: 100%; padding: 11px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); color: var(--fg); font-size: 14px;">
+                </div>
+                <div>
+                  <label style="font-size: 13px; font-weight: 700;">Place or Keyword *</label>
+                  <input id="add-p-input" class="tr-in" placeholder="e.g. Santorini, Rolex Submariner" style="margin-top: 6px; width: 100%; padding: 11px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); color: var(--fg); font-size: 14px;">
+                </div>
+                <button class="tr-btn" onclick="addSingleItemAction()" style="padding: 11px 16px; border-radius: 12px; background: var(--acc); color: var(--accfg); font-weight: 700; font-size: 14px;">Add to list</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- List Status Chip -->
+          <div style="margin-top: 16px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--bg); display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+            <div>
+              <div style="font-weight: 700; font-size: 14px;"><span class="mono" id="list-count-badge">0</span> entries ready</div>
+              <div id="list-preview-summary" style="font-size: 12px; color: var(--mut); margin-top: 2px;">No items queued yet</div>
+            </div>
+            <button class="tr-btn tr-ghost" onclick="clearListAction()" style="padding: 8px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surf2); color: var(--fg); font-weight: 700; font-size: 13px;">Clear</button>
+          </div>
+        </div>
+
+        <!-- CARD 2: PRESETS & SETTINGS -->
+        <div style="padding: 22px; border: 1px solid var(--line); border-radius: 20px; background: var(--surf); box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 18px;">
+          <h2 style="margin: 0; font-size: 20px; font-weight: 700;">2. Settings</h2>
+          
+          <!-- Preset Dropdown -->
+          <div>
+            <span style="font-size: 13px; font-weight: 700;">Crop & Aspect Preset</span>
+            <select id="preset-select" class="tr-in" onchange="onPresetChange(this.value)" style="margin-top: 6px; width: 100%; padding: 11px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); color: var(--fg); font-size: 14px; font-weight: 600;">
+              <option value="travel">Travel and places (16:9 / 1920x1080)</option>
+              <option value="products">Products and catalogs (1:1 / 1080x1080)</option>
+              <option value="blog">Editorial and blog (3:2 / 1200x800)</option>
+              <option value="social">Social posts (4:5 / 1080x1350)</option>
+            </select>
+          </div>
+
+          <!-- Format Picker -->
+          <div>
+            <span style="font-size: 13px; font-weight: 700;">Output Format</span>
+            <div style="margin-top: 6px; display: flex; padding: 4px; gap: 4px; border: 1px solid var(--line); border-radius: 14px; background: var(--surf2);">
+              <button id="fmt-webp" onclick="setFormat('WEBP')" style="flex: 1; padding: 8px; border-radius: 10px; background: var(--surf); color: var(--fg); font-weight: 700; font-size: 13px; box-shadow: var(--shadow);">WebP</button>
+              <button id="fmt-png" onclick="setFormat('PNG')" style="flex: 1; padding: 8px; border-radius: 10px; background: transparent; color: var(--mut); font-weight: 700; font-size: 13px;">PNG</button>
+              <button id="fmt-jpg" onclick="setFormat('JPG')" style="flex: 1; padding: 8px; border-radius: 10px; background: transparent; color: var(--mut); font-weight: 700; font-size: 13px;">JPG</button>
+            </div>
+          </div>
+
+          <!-- Source Order -->
+          <div>
+            <span style="font-size: 13px; font-weight: 700;">Source Strategy</span>
+            <div style="margin-top: 6px; display: flex; padding: 4px; gap: 4px; border: 1px solid var(--line); border-radius: 14px; background: var(--surf2);">
+              <button id="src-auto" onclick="setSource('auto')" style="flex: 1; padding: 8px; border-radius: 10px; background: var(--surf); color: var(--fg); font-weight: 700; font-size: 13px; box-shadow: var(--shadow);">Auto</button>
+              <button id="src-pexels" onclick="setSource('pexels')" style="flex: 1; padding: 8px; border-radius: 10px; background: transparent; color: var(--mut); font-weight: 700; font-size: 13px;">Pexels only</button>
+              <button id="src-pixabay" onclick="setSource('pixabay')" style="flex: 1; padding: 8px; border-radius: 10px; background: transparent; color: var(--mut); font-weight: 700; font-size: 13px;">Pixabay only</button>
+            </div>
+            <div id="source-hint-txt" style="margin-top: 6px; font-size: 12px; color: var(--mut);">Pexels primary, Pixabay automatic fallback.</div>
+          </div>
+
+          <!-- Width Slider -->
+          <div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 700;">
+              <label for="width-range">Target Width</label>
+              <span class="mono" id="width-val-txt">1920 px</span>
+            </div>
+            <input id="width-range" type="range" min="640" max="1920" step="40" value="1920" oninput="onWidthSlider(this.value)">
+          </div>
+
+          <!-- Quality Slider -->
+          <div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 700;">
+              <label for="quality-range">Compression Quality</label>
+              <span class="mono" id="quality-val-txt">85</span>
+            </div>
+            <input id="quality-range" type="range" min="40" max="100" step="5" value="85" oninput="onQualitySlider(this.value)">
+          </div>
+
+          <!-- Deduplication Toggle -->
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+            <span style="font-size: 13px; font-weight: 600;">Deduplicate repeated items</span>
+            <input type="checkbox" id="dedupe-check" checked onchange="toggleDedupe(this.checked)" style="width: 20px; height: 20px; accent-color: var(--acc); cursor: pointer;">
+          </div>
+
+          <!-- Start Job Button -->
+          <button id="start-job-btn" class="tr-btn" onclick="startJobAction()" style="margin-top: 6px; width: 100%; padding: 14px; border-radius: 14px; background: var(--acc); color: var(--accfg); font-weight: 800; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            <span id="start-btn-label">Start pipeline job</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN: PROGRESS + REVIEW -->
+      <div style="flex: 2 1 600px; max-width: 100%; min-width: 0; display: flex; flex-direction: column; gap: 20px;">
+        
+        <!-- CARD 3: JOB PROGRESS -->
+        <div style="padding: 22px; border: 1px solid var(--line); border-radius: 20px; background: var(--surf); box-shadow: var(--shadow);">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 style="margin: 0; font-size: 20px; font-weight: 700;">3. Job progress</h2>
+            <span id="phase-badge" style="display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 999px; background: var(--surf2); border: 1px solid var(--line); font-size: 13px; font-weight: 700;">
+              <span id="phase-dot" style="width: 8px; height: 8px; border-radius: 50%; background: var(--mut);"></span>
+              <span id="phase-text">Ready to start</span>
+            </span>
+          </div>
+
+          <!-- Progress Bar -->
+          <div style="margin-top: 16px; height: 10px; border-radius: 6px; background: var(--surf2); overflow: hidden;">
+            <div id="progress-bar-inner" style="width: 0%; height: 100%; background: var(--acc); border-radius: 6px; transition: width .4s;"></div>
+          </div>
+
+          <!-- 4 Stat Counters -->
+          <div style="margin-top: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 12px;">
+            <div style="padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--bg);">
+              <div class="disp mono" id="cnt-downloaded" style="font-size: 24px; font-weight: 700; color: var(--ok);">0</div>
+              <div style="font-size: 12px; color: var(--mut); margin-top: 4px; font-weight: 600;">Downloaded</div>
+            </div>
+            <div style="padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--bg);">
+              <div class="disp mono" id="cnt-fallbacks" style="font-size: 24px; font-weight: 700; color: var(--acc2);">0</div>
+              <div style="font-size: 12px; color: var(--mut); margin-top: 4px; font-weight: 600;">Fallbacks</div>
+            </div>
+            <div style="padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--bg);">
+              <div class="disp mono" id="cnt-skipped" style="font-size: 24px; font-weight: 700; color: var(--acc);">0</div>
+              <div style="font-size: 12px; color: var(--mut); margin-top: 4px; font-weight: 600;">Skipped</div>
+            </div>
+            <div style="padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--bg);">
+              <div class="disp mono" id="cnt-failed" style="font-size: 24px; font-weight: 700; color: var(--bad);">0</div>
+              <div style="font-size: 12px; color: var(--mut); margin-top: 4px; font-weight: 600;">Failed</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD 4: REVIEW & EXPORT -->
+        <div style="padding: 22px; border: 1px solid var(--line); border-radius: 20px; background: var(--surf); box-shadow: var(--shadow);">
+          <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px;">
+            <h2 style="margin: 0; font-size: 20px; font-weight: 700;">4. Review & Export</h2>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+              <!-- Filter Select -->
+              <select id="review-filter" class="tr-in" onchange="onFilterChange(this.value)" style="padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surf2); color: var(--fg); font-weight: 700; font-size: 13px;">
+                <option value="All">Show: All</option>
+                <option value="ready">Show: Ready</option>
+                <option value="skipped">Show: Skipped</option>
+                <option value="failed">Show: Failed</option>
+              </select>
+              
+              <button class="tr-btn tr-ghost" onclick="downloadCreditsAction()" style="padding: 9px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surf2); color: var(--fg); font-weight: 700; font-size: 13px;">Credits file</button>
+              
+              <button id="zip-dl-btn" class="tr-btn" onclick="downloadZipAction()" style="display: flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 12px; background: var(--acc); color: var(--accfg); font-weight: 700; font-size: 13px;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"></path></svg>
+                Download ZIP
+              </button>
+            </div>
+          </div>
+
+          <!-- Cards Grid -->
+          <div id="cards-grid" style="margin-top: 18px; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px;">
+            <!-- Rendered dynamically -->
+          </div>
+
+          <!-- Pagination -->
+          <div id="pagination-row" style="margin-top: 20px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; padding-top: 16px; border-top: 1px solid var(--line);">
+            <div class="mono" id="pagination-info" style="font-size: 13px; color: var(--mut);">Showing 0 of 0</div>
+            <div style="display: flex; gap: 6px; align-items: center;">
+              <button class="tr-btn tr-ghost" onclick="changePage(-1)" style="width: 38px; height: 38px; border: 1px solid var(--line); border-radius: 10px; background: var(--surf2); color: var(--fg); display: flex; align-items: center; justify-content: center;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 6l-6 6 6 6"></path></svg>
+              </button>
+              <div id="pagination-pages" style="display: flex; gap: 6px;"></div>
+              <button class="tr-btn tr-ghost" onclick="changePage(1)" style="width: 38px; height: 38px; border: 1px solid var(--line); border-radius: 10px; background: var(--surf2); color: var(--fg); display: flex; align-items: center; justify-content: center;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 6l6 6-6 6"></path></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- ======================================================== -->
+  <!-- VIEW 2: ADMIN CONSOLE (STRICT PRIVACY SEALED)            -->
+  <!-- ======================================================== -->
+  <main id="view-admin" class="view-container tr-view" style="max-width: 1400px; margin: 0 auto; padding: 24px 24px 64px; width: 100%;">
+    
+    <!-- LOGIN GATE -->
+    <div id="admin-gate-card" style="min-height: 520px; display: flex; align-items: center; justify-content: center; padding: 20px;">
+      <div style="width: 100%; max-width: 420px; padding: 32px; border: 1px solid var(--line); border-radius: 24px; background: var(--surf); box-shadow: var(--shadow-h); text-align: center;">
+        <div style="display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 16px; background: var(--surf2); margin-bottom: 16px;">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--acc)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        </div>
+        <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 6px;">Administrator Sign In</h1>
+        <p style="font-size: 13px; color: var(--mut); margin-bottom: 24px;">Enter passkey to manage API providers, meters, and guest policies.</p>
+        
+        <input type="password" id="admin-passkey-input" class="tr-in" placeholder="Enter admin passkey (default: admin123)" style="width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); color: var(--fg); font-size: 14px; margin-bottom: 14px;">
+        <button class="tr-btn" onclick="submitAdminLogin()" style="width: 100%; padding: 12px; border-radius: 12px; background: var(--acc); color: var(--accfg); font-weight: 700; font-size: 14px;">Sign In to Console</button>
+      </div>
+    </div>
+
+    <!-- ADMIN DASHBOARD (When Authed) -->
+    <div id="admin-dashboard" style="display: none;">
+      <div class="admin-layout" style="display: flex; gap: 24px; align-items: flex-start;">
+        
+        <!-- SIDEBAR -->
+        <div class="admin-sidebar" style="width: 250px; flex-shrink: 0; padding: 18px; border: 1px solid var(--line); border-radius: 20px; background: var(--surf); box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 6px;">
+          <div style="padding: 8px 12px; margin-bottom: 8px; border-bottom: 1px solid var(--line);">
+            <div style="font-weight: 700; font-size: 15px;">Admin Controls</div>
+            <div class="mono" style="font-size: 11px; color: var(--ok); margin-top: 2px;">Session Verified</div>
+          </div>
+          <button class="tr-row admin-nav-btn" onclick="switchAdminSection('overview')" id="adm-nav-overview" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border-radius: 10px; background: var(--surf2); color: var(--fg); font-size: 13px; font-weight: 700; text-align: left;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+            Overview & Meters
+          </button>
+          <button class="tr-row admin-nav-btn" onclick="switchAdminSection('providers')" id="adm-nav-providers" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border-radius: 10px; background: transparent; color: var(--mut); font-size: 13px; font-weight: 700; text-align: left;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+            Providers & Keys
+          </button>
+          <button class="tr-row admin-nav-btn" onclick="switchAdminSection('policy')" id="adm-nav-policy" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border-radius: 10px; background: transparent; color: var(--mut); font-size: 13px; font-weight: 700; text-align: left;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+            Policy & Defaults
+          </button>
+          <button class="tr-row admin-nav-btn" onclick="switchAdminSection('queue')" id="adm-nav-queue" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border-radius: 10px; background: transparent; color: var(--mut); font-size: 13px; font-weight: 700; text-align: left;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+            Queue Monitor
+          </button>
+          <button class="tr-row admin-nav-btn" onclick="switchAdminSection('audit')" id="adm-nav-audit" style="display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border-radius: 10px; background: transparent; color: var(--mut); font-size: 13px; font-weight: 700; text-align: left;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+            Audit Log
+          </button>
+          <button class="tr-row" onclick="adminSignOut()" style="margin-top: 18px; display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border-radius: 10px; background: transparent; color: var(--bad); font-size: 13px; font-weight: 700; text-align: left;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+            Sign Out
+          </button>
+        </div>
+
+        <!-- MAIN ADMIN CONTENT AREA -->
+        <div style="flex: 1 1 0; min-width: 0;">
+          
+          <!-- ADMIN SECTION: OVERVIEW -->
+          <div id="admin-sec-overview" class="admin-tab-pane">
+            <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 6px;">System Overview</h1>
+            <p style="font-size: 13px; color: var(--mut); margin-bottom: 20px;">Live usage metrics, provider quota consumption, and weekly activity.</p>
+            
+            <!-- 4 Stat Cards with Sparklines -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+              <div style="padding: 18px; border: 1px solid var(--line); border-radius: 18px; background: var(--surf); box-shadow: var(--shadow);">
+                <div style="font-size: 12px; color: var(--mut); font-weight: 600;">Active Guest Sessions</div>
+                <div class="disp mono" id="adm-active-sess" style="font-size: 32px; font-weight: 700; color: var(--acc); margin: 6px 0;">0</div>
+                <div class="mono" style="font-size: 11px; color: var(--ok);">Isolated sandbox</div>
+              </div>
+              <div style="padding: 18px; border: 1px solid var(--line); border-radius: 18px; background: var(--surf); box-shadow: var(--shadow);">
+                <div style="font-size: 12px; color: var(--mut); font-weight: 600;">Total Storage Used</div>
+                <div class="disp mono" id="adm-total-store" style="font-size: 32px; font-weight: 700; color: var(--fg); margin: 6px 0;">0 MB</div>
+                <div class="mono" style="font-size: 11px; color: var(--mut);">Across all guests</div>
+              </div>
+              <div style="padding: 18px; border: 1px solid var(--line); border-radius: 18px; background: var(--surf); box-shadow: var(--shadow);">
+                <div style="font-size: 12px; color: var(--mut); font-weight: 600;">Jobs Completed Today</div>
+                <div class="disp mono" id="adm-jobs-today" style="font-size: 32px; font-weight: 700; color: var(--ok); margin: 6px 0;">0</div>
+                <div class="mono" style="font-size: 11px; color: var(--mut);">Daily throughput</div>
+              </div>
+              <div style="padding: 18px; border: 1px solid var(--line); border-radius: 18px; background: var(--surf); box-shadow: var(--shadow);">
+                <div style="font-size: 12px; color: var(--mut); font-weight: 600;">Errors (24h)</div>
+                <div class="disp mono" id="adm-errors-24h" style="font-size: 32px; font-weight: 700; color: var(--bad); margin: 6px 0;">0</div>
+                <div class="mono" style="font-size: 11px; color: var(--mut);">Failed downloads</div>
+              </div>
+            </div>
+
+            <!-- Quota Meters -->
+            <div style="padding: 22px; border: 1px solid var(--line); border-radius: 20px; background: var(--surf); box-shadow: var(--shadow); margin-bottom: 24px;">
+              <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 14px;">Provider Quota Meters</h3>
+              
+              <div style="display: flex; flex-direction: column; gap: 16px;">
+                <!-- Pexels Hour -->
+                <div>
+                  <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; margin-bottom: 6px;">
+                    <span>Pexels, current hour</span>
+                    <span class="mono" id="quota-pex-hour-txt">0 / 200</span>
+                  </div>
+                  <div style="height: 8px; border-radius: 4px; background: var(--surf2); overflow: hidden;">
+                    <div id="quota-pex-hour-bar" style="width: 0%; height: 100%; background: var(--acc); border-radius: 4px; transition: width .6s;"></div>
+                  </div>
+                </div>
+
+                <!-- Pexels Month -->
+                <div>
+                  <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; margin-bottom: 6px;">
+                    <span>Pexels, current month</span>
+                    <span class="mono" id="quota-pex-month-txt">0 / 20,000</span>
+                  </div>
+                  <div style="height: 8px; border-radius: 4px; background: var(--surf2); overflow: hidden;">
+                    <div id="quota-pex-month-bar" style="width: 0%; height: 100%; background: var(--acc); border-radius: 4px; transition: width .6s;"></div>
+                  </div>
+                </div>
+
+                <!-- Pixabay Hour -->
+                <div>
+                  <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; margin-bottom: 6px;">
+                    <span>Pixabay, current hour</span>
+                    <span class="mono" id="quota-pix-hour-txt">0 / 5,000</span>
+                  </div>
+                  <div style="height: 8px; border-radius: 4px; background: var(--surf2); overflow: hidden;">
+                    <div id="quota-pix-hour-bar" style="width: 0%; height: 100%; background: var(--acc2); border-radius: 4px; transition: width .6s;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3D Bar Chart -->
+            <div style="padding: 22px; border: 1px solid var(--line); border-radius: 20px; background: var(--surf); box-shadow: var(--shadow);">
+              <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 6px;">7-Day Processing Volume</h3>
+              <p style="font-size: 12px; color: var(--mut); margin-bottom: 24px;">Processed image batches over the last seven days.</p>
+              
+              <div style="height: 180px; display: flex; align-items: flex-end; justify-content: space-around; padding-bottom: 20px; border-bottom: 1px solid var(--line);">
+                <div style="text-align: center;"><div class="tr-bar" style="--h: 60px; --c: var(--acc); --d: 0.1s;"><div class="tr-bt"></div><div class="tr-bs"></div></div><div class="mono" style="font-size: 11px; margin-top: 18px; color: var(--mut);">Mon</div></div>
+                <div style="text-align: center;"><div class="tr-bar" style="--h: 88px; --c: var(--acc); --d: 0.2s;"><div class="tr-bt"></div><div class="tr-bs"></div></div><div class="mono" style="font-size: 11px; margin-top: 18px; color: var(--mut);">Tue</div></div>
+                <div style="text-align: center;"><div class="tr-bar" style="--h: 75px; --c: var(--acc); --d: 0.3s;"><div class="tr-bt"></div><div class="tr-bs"></div></div><div class="mono" style="font-size: 11px; margin-top: 18px; color: var(--mut);">Wed</div></div>
+                <div style="text-align: center;"><div class="tr-bar" style="--h: 120px; --c: var(--acc); --d: 0.4s;"><div class="tr-bt"></div><div class="tr-bs"></div></div><div class="mono" style="font-size: 11px; margin-top: 18px; color: var(--mut);">Thu</div></div>
+                <div style="text-align: center;"><div class="tr-bar" style="--h: 105px; --c: var(--acc); --d: 0.5s;"><div class="tr-bt"></div><div class="tr-bs"></div></div><div class="mono" style="font-size: 11px; margin-top: 18px; color: var(--mut);">Fri</div></div>
+                <div style="text-align: center;"><div class="tr-bar" style="--h: 145px; --c: var(--acc2); --d: 0.6s;"><div class="tr-bt"></div><div class="tr-bs"></div></div><div class="mono" style="font-size: 11px; margin-top: 18px; color: var(--mut);">Sat</div></div>
+                <div style="text-align: center;"><div class="tr-bar" style="--h: 165px; --c: var(--ok); --d: 0.7s;"><div class="tr-bt"></div><div class="tr-bs"></div></div><div class="mono" style="font-size: 11px; margin-top: 18px; color: var(--fg); font-weight: 700;">Sun</div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ADMIN SECTION: PROVIDERS -->
+          <div id="admin-sec-providers" class="admin-tab-pane" style="display: none;">
+            <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 6px;">Providers & API Keys</h1>
+            <p style="font-size: 13px; color: var(--mut); margin-bottom: 20px;">Manage image provider credentials, test connection latency, and set fallback ordering.</p>
+            
+            <div id="admin-providers-list" style="display: flex; flex-direction: column; gap: 16px;">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- ADMIN SECTION: POLICY -->
+          <div id="admin-sec-policy" class="admin-tab-pane" style="display: none;">
+            <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 6px;">Guest Policy & Defaults</h1>
+            <p style="font-size: 13px; color: var(--mut); margin-bottom: 20px;">Configure automatic session expiration, batch row limits, and processing defaults.</p>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+              <!-- Policy Box -->
+              <div style="padding: 22px; border: 1px solid var(--line); border-radius: 20px; background: var(--surf); box-shadow: var(--shadow);">
+                <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px;">Guest Sessions</h3>
+                
+                <div style="display: flex; flex-direction: column; gap: 14px;">
+                  <div>
+                    <label style="font-size: 13px; font-weight: 700;">Session Lifetime (TTL)</label>
+                    <select id="pol-ttl" class="tr-in" style="margin-top: 6px; width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--fg);">
+                      <option value="6">6 hours</option>
+                      <option value="24" selected>24 hours (Default)</option>
+                      <option value="48">48 hours</option>
+                      <option value="168">7 days</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style="font-size: 13px; font-weight: 700;">Max Entries per Job</label>
+                    <input type="number" id="pol-max-rows" value="500" class="tr-in" style="margin-top: 6px; width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--fg);">
+                  </div>
+                  <div>
+                    <label style="font-size: 13px; font-weight: 700;">Max Jobs per Day (per session)</label>
+                    <input type="number" id="pol-max-jobs" value="5" class="tr-in" style="margin-top: 6px; width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--fg);">
+                  </div>
+                  <div>
+                    <label style="font-size: 13px; font-weight: 700;">Max Storage per Session (MB)</label>
+                    <input type="number" id="pol-max-store" value="200" class="tr-in" style="margin-top: 6px; width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--fg);">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Defaults Box -->
+              <div style="padding: 22px; border: 1px solid var(--line); border-radius: 20px; background: var(--surf); box-shadow: var(--shadow);">
+                <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px;">Processing Defaults</h3>
+                
+                <div style="display: flex; flex-direction: column; gap: 14px;">
+                  <div>
+                    <label style="font-size: 13px; font-weight: 700;">Default Max Width (px)</label>
+                    <input type="number" id="def-width" value="1920" class="tr-in" style="margin-top: 6px; width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--fg);">
+                  </div>
+                  <div>
+                    <label style="font-size: 13px; font-weight: 700;">Default Quality (WebP/JPG)</label>
+                    <input type="number" id="def-quality" value="85" class="tr-in" style="margin-top: 6px; width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--fg);">
+                  </div>
+                  <div>
+                    <label style="font-size: 13px; font-weight: 700;">Worker Concurrency</label>
+                    <input type="number" id="def-concurrency" value="5" class="tr-in" style="margin-top: 6px; width: 100%; padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--fg);">
+                  </div>
+                  <button class="tr-btn" onclick="saveAdminPolicyAction()" style="margin-top: 8px; padding: 12px; border-radius: 12px; background: var(--acc); color: var(--accfg); font-weight: 700; font-size: 14px;">Save Policy & Defaults</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ADMIN SECTION: QUEUE -->
+          <div id="admin-sec-queue" class="admin-tab-pane" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <h1 style="font-size: 24px; font-weight: 700;">Queue Monitor</h1>
+              <button class="tr-btn tr-ghost" onclick="purgeExpiredAction()" style="padding: 9px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surf2); color: var(--bad); font-weight: 700; font-size: 13px;">Purge Expired Sessions</button>
+            </div>
+            <p style="font-size: 13px; color: var(--mut); margin-bottom: 20px;">
+              Privacy rule enforced: Only job identifiers, masked sessions, provider types and statuses are visible. Guest search queries and images are never exposed.
+            </p>
+            
+            <div style="border: 1px solid var(--line); border-radius: 18px; background: var(--surf); overflow: hidden; box-shadow: var(--shadow);">
+              <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+                <thead>
+                  <tr style="border-bottom: 1px solid var(--line); background: var(--surf2); color: var(--mut); font-weight: 700;">
+                    <th style="padding: 12px 16px;">Job ID</th>
+                    <th style="padding: 12px 16px;">Masked Session</th>
+                    <th style="padding: 12px 16px;">Entries</th>
+                    <th style="padding: 12px 16px;">Provider</th>
+                    <th style="padding: 12px 16px;">Status</th>
+                    <th style="padding: 12px 16px;">Timestamp</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-queue-tbody">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- ADMIN SECTION: AUDIT -->
+          <div id="admin-sec-audit" class="admin-tab-pane" style="display: none;">
+            <h1 style="font-size: 24px; font-weight: 700; margin-bottom: 6px;">Audit Log</h1>
+            <p style="font-size: 13px; color: var(--mut); margin-bottom: 20px;">Tamper-evident record of administrative and system lifecycle events.</p>
+            
+            <div id="admin-audit-list" style="display: flex; flex-direction: column; gap: 10px;">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ======================================================== -->
+  <!-- VIEW 3: SHOWCASE / LANDING                               -->
+  <!-- ======================================================== -->
+  <main id="view-landing" class="view-container tr-view" style="max-width: 1200px; margin: 0 auto; padding: 48px 24px 80px; width: 100%;">
+    
+    <!-- Hero Banner -->
+    <div style="text-align: center; max-width: 820px; margin: 0 auto 64px;">
+      <div style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px; background: var(--surf2); border: 1px solid var(--line); font-size: 12px; font-weight: 700; color: var(--acc); margin-bottom: 18px;">
+        <span class="tr-live" style="width: 8px; height: 8px; border-radius: 50%; background: var(--acc);"></span>
+        Zero Registration - Pure Guest Architecture
+      </div>
+      <h1 style="font-size: clamp(32px, 5vw, 54px); font-weight: 800; line-height: 1.1; margin-bottom: 18px; letter-spacing: -0.035em;">
+        Turn any list into ready-to-use images.
+      </h1>
+      <p style="font-size: 18px; line-height: 1.6; color: var(--mut); margin-bottom: 28px;">
+        Not just countries. Feed in places, products, blog titles, or social posts. Terra searches high-resolution providers, automatically center-crops to your preset, and packages ready WebP, PNG, or JPG files with source credits in a single ZIP.
+      </p>
+      <div style="display: flex; justify-content: center; gap: 14px; flex-wrap: wrap;">
+        <button class="tr-btn" onclick="switchView('workspace')" style="padding: 14px 28px; border-radius: 14px; background: var(--acc); color: var(--accfg); font-weight: 800; font-size: 15px; display: inline-flex; align-items: center; gap: 8px;">
+          Open guest workspace
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        </button>
+        <button class="tr-btn tr-ghost" onclick="switchView('admin')" style="padding: 14px 22px; border: 1px solid var(--line); border-radius: 14px; background: var(--surf); color: var(--fg); font-weight: 700; font-size: 15px;">
+          Admin Console
+        </button>
+      </div>
+    </div>
+
+    <!-- 4 Pipeline Steps -->
+    <div style="margin-bottom: 64px;">
+      <h2 style="font-size: 26px; font-weight: 700; text-align: center; margin-bottom: 32px;">Four steps from list to ZIP.</h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px;">
+        <div style="padding: 24px; border: 1px solid var(--line); border-radius: 20px; background: var(--surf); box-shadow: var(--shadow);">
+          <div class="disp mono" style="font-size: 28px; font-weight: 800; color: var(--acc); margin-bottom: 10px;">01</div>
+          <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">Upload or paste</h3>
+          <p style="font-size: 13px; color: var(--mut); line-height: 1.5;">Drop a CSV or paste your keyword list directly into the workspace.</p>
+        </div>
+        <div style="padding: 24px; border: 1px solid var(--line); border-radius: 20px; background: var(--surf); box-shadow: var(--shadow);">
+          <div class="disp mono" style="font-size: 28px; font-weight: 800; color: var(--acc); margin-bottom: 10px;">02</div>
+          <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">Choose preset</h3>
+          <p style="font-size: 13px; color: var(--mut); line-height: 1.5;">Select Travel (16:9), Product (1:1), Blog (3:2), or Social (4:5) with custom compression.</p>
+        </div>
+        <div style="padding: 24px; border: 1px solid var(--line); border-radius: 20px; background: var(--surf); box-shadow: var(--shadow);">
+          <div class="disp mono" style="font-size: 28px; font-weight: 800; color: var(--acc); margin-bottom: 10px;">03</div>
+          <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">Smart fallback pipeline</h3>
+          <p style="font-size: 13px; color: var(--mut); line-height: 1.5;">Pexels queried first; if no hit or rate limit, automatically fails over to Pixabay seamlessly.</p>
+        </div>
+        <div style="padding: 24px; border: 1px solid var(--line); border-radius: 20px; background: var(--surf); box-shadow: var(--shadow);">
+          <div class="disp mono" style="font-size: 28px; font-weight: 800; color: var(--acc); margin-bottom: 10px;">04</div>
+          <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">Review & export</h3>
+          <p style="font-size: 13px; color: var(--mut); line-height: 1.5;">Swap alternative candidates without re-downloading, then download your ZIP with credits.txt.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Presets Showcase -->
+    <div style="margin-bottom: 64px; padding: 36px; border: 1px solid var(--line); border-radius: 24px; background: var(--surf); box-shadow: var(--shadow);">
+      <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 8px;">Built-in aspect ratio presets</h2>
+      <p style="font-size: 14px; color: var(--mut); margin-bottom: 24px;">Eliminate black bars, stretching, and distortion with smart focal center-cropping.</p>
+      
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+        <div style="padding: 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--bg);">
+          <div style="aspect-ratio: 16/9; background: var(--surf2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--acc);">16 : 9</div>
+          <div style="font-weight: 700; font-size: 14px; margin-top: 10px;">Travel and places</div>
+          <div class="mono" style="font-size: 12px; color: var(--mut);">1920 x 1080 px</div>
+        </div>
+        <div style="padding: 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--bg);">
+          <div style="aspect-ratio: 1/1; background: var(--surf2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--acc);">1 : 1</div>
+          <div style="font-weight: 700; font-size: 14px; margin-top: 10px;">Products and catalogs</div>
+          <div class="mono" style="font-size: 12px; color: var(--mut);">1080 x 1080 px</div>
+        </div>
+        <div style="padding: 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--bg);">
+          <div style="aspect-ratio: 3/2; background: var(--surf2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--acc);">3 : 2</div>
+          <div style="font-weight: 700; font-size: 14px; margin-top: 10px;">Editorial and blog</div>
+          <div class="mono" style="font-size: 12px; color: var(--mut);">1200 x 800 px</div>
+        </div>
+        <div style="padding: 16px; border: 1px solid var(--line); border-radius: 16px; background: var(--bg);">
+          <div style="aspect-ratio: 4/5; background: var(--surf2); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--acc);">4 : 5</div>
+          <div style="font-weight: 700; font-size: 14px; margin-top: 10px;">Social posts</div>
+          <div class="mono" style="font-size: 12px; color: var(--mut);">1080 x 1350 px</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ======================================================== -->
+  <!-- MODALS & TOAST NOTIFICATION                             -->
+  <!-- ======================================================== -->
+
+  <!-- DELETE CONFIRMATION MODAL -->
+  <div id="modal-delete" class="tr-ovl" style="display: none; position: fixed; inset: 0; z-index: 100; background: rgba(6,9,14,.65); align-items: center; justify-content: center; padding: 20px;">
+    <div class="tr-modal" style="width: 100%; max-width: 440px; padding: 28px; border-radius: 22px; border: 1px solid var(--line); background: var(--surf); box-shadow: var(--shadow-h);">
+      <h3 style="font-size: 22px; margin: 0; font-weight: 700;">Delete everything in this session?</h3>
+      <p style="margin: 12px 0 0; font-size: 14px; line-height: 1.6; color: var(--mut);">Your list, images and ZIP files are removed from the server right away. This cannot be undone.</p>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px;">
+        <button class="tr-btn tr-ghost" onclick="closeModal('modal-delete')" style="padding: 11px 18px; border: 1px solid var(--line); border-radius: 12px; background: var(--surf2); color: var(--fg); font-weight: 700; font-size: 14px;">Keep my data</button>
+        <button class="tr-btn" onclick="confirmDeleteDataAction()" style="padding: 11px 18px; border-radius: 12px; background: var(--bad); color: var(--badfg); font-weight: 700; font-size: 14px;">Delete now</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SWAP CANDIDATE MODAL -->
+  <div id="modal-swap" class="tr-ovl" style="display: none; position: fixed; inset: 0; z-index: 100; background: rgba(6,9,14,.65); align-items: center; justify-content: center; padding: 20px;">
+    <div class="tr-modal" style="width: 100%; max-width: 580px; padding: 28px; border-radius: 22px; border: 1px solid var(--line); background: var(--surf); box-shadow: var(--shadow-h);">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+        <div>
+          <h3 style="font-size: 22px; margin: 0; font-weight: 700;">Choose another image</h3>
+          <p id="swap-item-subtitle" style="margin: 6px 0 0; font-size: 14px; color: var(--mut);">Select from alternative candidates</p>
+        </div>
+        <button onclick="closeModal('modal-swap')" style="padding: 6px; border-radius: 8px; background: transparent; color: var(--mut);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <div id="swap-candidates-grid" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; max-height: 420px; overflow-y: auto;">
+        <!-- Candidates rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast-banner" class="tr-toast" style="display: none; position: fixed; right: 24px; bottom: 24px; z-index: 120; display: flex; align-items: center; gap: 14px; padding: 14px 18px; border: 1px solid var(--line); border-left: 5px solid var(--acc); border-radius: 14px; background: var(--surf); box-shadow: var(--shadow-h); max-width: 380px;">
+    <div>
+      <div id="toast-title" style="font-weight: 700; font-size: 14px;">Notification</div>
+      <div id="toast-msg" style="font-size: 13px; color: var(--mut); margin-top: 2px;">Details</div>
+    </div>
+    <button onclick="dismissToast()" style="background: transparent; color: var(--mut); padding: 4px; border-radius: 6px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    </button>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- JAVASCRIPT APP LOGIC                                     -->
+  <!-- ======================================================== -->
+  <script>
+    // Global State
+    let currentSession = null;
+    let currentJobStatus = null;
+    let pollInterval = null;
+    let countdownInterval = null;
+    let toastTimeout = null;
+    let activeFilter = 'All';
+    let currentPage = 1;
+    const itemsPerPage = 8;
+    let currentSwapItemId = null;
+    let adminToken = sessionStorage.getItem('terra_admin_token') || null;
+
+    // Default 24 World Wonders Sample
+    const SAMPLE_WONDERS = [
+      ['India', 'Taj Mahal'],
+      ['France', 'Eiffel Tower'],
+      ['Brazil', 'Christ the Redeemer'],
+      ['Japan', 'Mount Fuji'],
+      ['Peru', 'Machu Picchu'],
+      ['Italy', 'Colosseum'],
+      ['Jordan', 'Petra'],
+      ['Australia', 'Sydney Opera House'],
+      ['Greece', 'Santorini'],
+      ['South Africa', 'Table Mountain'],
+      ['Egypt', 'Pyramids of Giza'],
+      ['China', 'Great Wall'],
+      ['USA', 'Grand Canyon'],
+      ['Cambodia', 'Angkor Wat'],
+      ['UK', 'Stonehenge'],
+      ['Spain', 'Sagrada Familia'],
+      ['Turkey', 'Hagia Sophia'],
+      ['Mexico', 'Chichen Itza'],
+      ['Canada', 'Banff National Park'],
+      ['Norway', 'Geirangerfjord'],
+      ['Iceland', 'Blue Lagoon'],
+      ['Morocco', 'Chefchaouen'],
+      ['Thailand', 'Phi Phi Islands'],
+      ['Tanzania', 'Mount Kilimanjaro']
+    ];
+
+    // Theme Management
+    function initTheme() {
+      const savedTheme = localStorage.getItem('terra_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      updateThemeIcons(savedTheme);
+    }
+
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme') || 'light';
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('terra_theme', next);
+      updateThemeIcons(next);
+    }
+
+    function updateThemeIcons(theme) {
+      document.getElementById('theme-icon-sun').style.display = theme === 'dark' ? 'block' : 'none';
+      document.getElementById('theme-icon-moon').style.display = theme === 'dark' ? 'none' : 'block';
+    }
+
+    // View Switching
+    function switchView(viewName) {
+      document.querySelectorAll('.view-container').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+      
+      const target = document.getElementById(`view-${viewName}`);
+      const navBtn = document.getElementById(`nav-${viewName}`);
+      if (target) target.classList.add('active');
+      if (navBtn) navBtn.classList.add('active');
+
+      if (viewName === 'admin') {
+        if (adminToken) {
+          showAdminDashboard();
+        } else {
+          document.getElementById('admin-gate-card').style.display = 'flex';
+          document.getElementById('admin-dashboard').style.display = 'none';
+        }
+      }
+    }
+
+    // Toast System
+    function showToast(kind, title, msg) {
+      const colors = {
+        ok: 'var(--ok)',
+        warn: 'var(--warn)',
+        bad: 'var(--bad)',
+        info: 'var(--acc)'
+      };
+      const banner = document.getElementById('toast-banner');
+      banner.style.borderLeftColor = colors[kind] || 'var(--acc)';
+      document.getElementById('toast-title').textContent = title;
+      document.getElementById('toast-msg').textContent = msg;
+      banner.style.display = 'flex';
+
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => { banner.style.display = 'none'; }, 3600);
+    }
+
+    function dismissToast() {
+      document.getElementById('toast-banner').style.display = 'none';
+    }
+
+    // Modals
+    function openModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'flex';
+    }
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    }
+
+    // Session Menu
+    function toggleSessionMenu() {
+      const menu = document.getElementById('session-menu');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+
+    document.addEventListener('click', (e) => {
+      const btn = document.getElementById('session-btn');
+      const menu = document.getElementById('session-menu');
+      if (btn && menu && !btn.contains(e.target) && !menu.contains(e.target)) {
+        menu.style.display = 'none';
+      }
+    });
+
+    // API Helper
+    async function apiFetch(endpoint, options = {}) {
+      options.headers = options.headers || {};
+      if (currentSession && currentSession.session_id) {
+        options.headers['X-Session-ID'] = currentSession.session_id;
+      }
+      if (adminToken) {
+        options.headers['X-Admin-Token'] = adminToken;
+      }
+      try {
+        const resp = await fetch(endpoint, options);
+        if (!resp.ok) {
+          const err = await resp.json().catch(() => ({ detail: 'Request failed' }));
+          throw new Error(err.detail || `HTTP ${resp.status}`);
+        }
+        return await resp.json();
+      } catch (err) {
+        throw err;
+      }
+    }
+
+    // Initial Load
+    async function initApp() {
+      initTheme();
+      // Check query params for recovery link
+      const urlParams = new URLSearchParams(window.location.search);
+      const recoveryToken = urlParams.get('recovery');
+
+      let endpoint = '/api/session';
+      if (recoveryToken) {
+        endpoint += `?recovery=${encodeURIComponent(recoveryToken)}`;
+      }
+
+      try {
+        const data = await apiFetch(endpoint);
+        currentSession = data.session;
+        renderSessionUI(currentSession);
+        
+        // If empty items, load samples automatically
+        if (!currentSession.items || currentSession.items.length === 0) {
+          await loadSamplePlaces(false);
+        } else {
+          renderWorkspaceItems();
+        }
+
+        startCountdownTimer();
+        startPollingJobStatus();
+      } catch (err) {
+        showToast('bad', 'Connection Error', 'Could not initialize session.');
+      }
+    }
+
+    function renderSessionUI(sess) {
+      if (!sess) return;
+      // Header meters
+      const storageMb = (sess.storage_bytes / (1024 * 1024)).toFixed(1);
+      document.getElementById('storage-used-txt').textContent = `${storageMb} MB`;
+      document.getElementById('jobs-today-txt').textContent = sess.jobs_today || 0;
+      
+      // Masked session ID
+      const sid = sess.session_id || '';
+      const masked = sid.length > 7 ? `${sid.slice(0, 4)}...${sid.slice(-3)}` : sid;
+      document.getElementById('session-masked-id').textContent = `session ${masked}`;
+
+      // Settings dropdowns
+      if (sess.preset) {
+        document.getElementById('preset-select').value = sess.preset;
+      }
+      if (sess.width) {
+        document.getElementById('width-range').value = sess.width;
+        document.getElementById('width-val-txt').textContent = `${sess.width} px`;
+      }
+      if (sess.quality) {
+        document.getElementById('quality-range').value = sess.quality;
+        document.getElementById('quality-val-txt').textContent = sess.quality;
+      }
+      if (sess.format) {
+        setFormatButtonsUI(sess.format);
+      }
+      if (sess.source) {
+        setSourceButtonsUI(sess.source);
+      }
+      if (sess.dedupe !== undefined) {
+        document.getElementById('dedupe-check').checked = sess.dedupe;
+      }
+    }
+
+    function startCountdownTimer() {
+      clearInterval(countdownInterval);
+      countdownInterval = setInterval(() => {
+        if (!currentSession || !currentSession.expires_at) return;
+        const remaining = Math.max(0, currentSession.expires_at - (Date.now() / 1000));
+        const hours = Math.floor(remaining / 3600);
+        const mins = Math.floor((remaining % 3600) / 60);
+        document.getElementById('session-countdown').textContent = `${hours}h ${mins.toString().padStart(2, '0')}m`;
+      }, 1000);
+    }
+
+    // Input Tabs
+    function switchInputTab(tab) {
+      ['upload', 'paste', 'add'].forEach(t => {
+        document.getElementById(`subtab-${t}`).style.display = t === tab ? 'block' : 'none';
+        const btn = document.getElementById(`tab-btn-${t}`);
+        if (t === tab) {
+          btn.style.background = 'var(--surf)';
+          btn.style.color = 'var(--fg)';
+          btn.style.boxShadow = 'var(--shadow)';
+        } else {
+          btn.style.background = 'transparent';
+          btn.style.color = 'var(--mut)';
+          btn.style.boxShadow = 'none';
+        }
+      });
+    }
+
+    // CSV and List Handling
+    async function loadSamplePlaces(notify = true) {
+      const items = SAMPLE_WONDERS.map(([c, p]) => ({ c, p }));
+      try {
+        const res = await apiFetch('/api/session/items', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items })
+        });
+        currentSession.items = res.items;
+        renderWorkspaceItems();
+        if (notify) showToast('ok', '24 Wonders Loaded', 'Sample world wonders ready to process.');
+      } catch (err) {
+        showToast('bad', 'Error', err.message);
+      }
+    }
+
+    function downloadCsvTemplate() {
+      const csv = "Country,Place\nIndia,Taj Mahal\nFrance,Eiffel Tower\nJapan,Mount Fuji\nUSA,Grand Canyon\n";
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'terra_template.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    async function handleCsvUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const text = await file.text();
+      const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+      const items = [];
+      
+      lines.forEach((line, idx) => {
+        // Skip header if contains 'country' or 'place'
+        if (idx === 0 && line.toLowerCase().includes('place')) return;
+        const parts = line.split(',');
+        if (parts.length >= 2) {
+          items.push({ c: parts[0].trim(), p: parts[1].trim() });
+        } else if (parts.length === 1) {
+          items.push({ c: '', p: parts[0].trim() });
+        }
+      });
+
+      if (items.length === 0) {
+        showToast('warn', 'Empty CSV', 'No valid entries found.');
+        return;
+      }
+
+      try {
+        const res = await apiFetch('/api/session/items', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items })
+        });
+        currentSession.items = res.items;
+        renderWorkspaceItems();
+        showToast('ok', 'CSV Uploaded', `${items.length} items loaded into workspace.`);
+      } catch (err) {
+        showToast('bad', 'Upload Error', err.message);
+      }
+    }
+
+    async function applyPastedList() {
+      const text = document.getElementById('paste-textarea').value.trim();
+      if (!text) {
+        showToast('warn', 'Paste List Empty', 'Please enter some lines.');
+        return;
+      }
+      const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+      const items = lines.map(line => {
+        const parts = line.split(/[,;\t]/);
+        if (parts.length >= 2) {
+          return { c: parts[0].trim(), p: parts.slice(1).join(' ').trim() };
+        }
+        return { c: '', p: line.trim() };
+      });
+
+      try {
+        const res = await apiFetch('/api/session/items', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ items })
+        });
+        currentSession.items = res.items;
+        renderWorkspaceItems();
+        showToast('ok', 'List Applied', `${items.length} items queued.`);
+      } catch (err) {
+        showToast('bad', 'Error', err.message);
+      }
+    }
+
+    async function addSingleItemAction() {
+      const c = document.getElementById('add-c-input').value.trim();
+      const p = document.getElementById('add-p-input').value.trim();
+      if (!p) {
+        showToast('warn', 'Keyword Required', 'Please enter a place or keyword.');
+        return;
+      }
+      try {
+        const res = await apiFetch('/api/session/item/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ c, p })
+        });
+        currentSession.items.push(res.item);
+        document.getElementById('add-p-input').value = '';
+        renderWorkspaceItems();
+        showToast('ok', 'Item Added', `Queued "${p}".`);
+      } catch (err) {
+        showToast('bad', 'Error', err.message);
+      }
+    }
+
+    async function clearListAction() {
+      try {
+        await apiFetch('/api/session/items', { method: 'DELETE' });
+        currentSession.items = [];
+        renderWorkspaceItems();
+        showToast('ok', 'List Cleared', 'All entries removed.');
+      } catch (err) {
+        showToast('bad', 'Error', err.message);
+      }
+    }
+
+    // Settings
+    async function onPresetChange(val) {
+      await updateSettingsAPI({ preset: val });
+      renderWorkspaceItems();
+    }
+
+    function onWidthSlider(val) {
+      document.getElementById('width-val-txt').textContent = `${val} px`;
+      updateSettingsAPI({ width: parseInt(val) });
+    }
+
+    function onQualitySlider(val) {
+      document.getElementById('quality-val-txt').textContent = val;
+      updateSettingsAPI({ quality: parseInt(val) });
+    }
+
+    async function setFormat(fmt) {
+      setFormatButtonsUI(fmt);
+      await updateSettingsAPI({ format: fmt });
+    }
+
+    function setFormatButtonsUI(fmt) {
+      ['WEBP', 'PNG', 'JPG'].forEach(f => {
+        const btn = document.getElementById(`fmt-${f.toLowerCase()}`);
+        if (f === fmt) {
+          btn.style.background = 'var(--surf)';
+          btn.style.color = 'var(--fg)';
+          btn.style.boxShadow = 'var(--shadow)';
+        } else {
+          btn.style.background = 'transparent';
+          btn.style.color = 'var(--mut)';
+          btn.style.boxShadow = 'none';
+        }
+      });
+    }
+
+    async function setSource(src) {
+      setSourceButtonsUI(src);
+      await updateSettingsAPI({ source: src });
+    }
+
+    function setSourceButtonsUI(src) {
+      const hints = {
+        auto: 'Pexels primary, Pixabay automatic fallback.',
+        pexels: 'Pexels only (up to 200/hr, 20k/mo).',
+        pixabay: 'Pixabay only (up to 5,000/hr).'
+      };
+      document.getElementById('source-hint-txt').textContent = hints[src] || '';
+      ['auto', 'pexels', 'pixabay'].forEach(s => {
+        const btn = document.getElementById(`src-${s}`);
+        if (s === src) {
+          btn.style.background = 'var(--surf)';
+          btn.style.color = 'var(--fg)';
+          btn.style.boxShadow = 'var(--shadow)';
+        } else {
+          btn.style.background = 'transparent';
+          btn.style.color = 'var(--mut)';
+          btn.style.boxShadow = 'none';
+        }
+      });
+    }
+
+    async function toggleDedupe(val) {
+      await updateSettingsAPI({ dedupe: val });
+    }
+
+    async function updateSettingsAPI(payload) {
+      try {
+        const res = await apiFetch('/api/session/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        currentSession = res.session;
+      } catch (err) {
+        showToast('bad', 'Settings Error', err.message);
+      }
+    }
+
+    // Job Execution & Polling
+    async function startJobAction() {
+      if (!currentSession.items || currentSession.items.length === 0) {
+        showToast('warn', 'Empty List', 'Add some items before starting.');
+        return;
+      }
+      try {
+        const res = await apiFetch('/api/session/job/start', { method: 'POST' });
+        if (res.success) {
+          showToast('info', 'Job Started', `${res.total} entries queued for pipeline.`);
+          document.getElementById('start-btn-label').textContent = 'Processing batch...';
+          document.getElementById('start-job-btn').disabled = true;
+          startPollingJobStatus();
+        }
+      } catch (err) {
+        showToast('bad', 'Job Failed', err.message);
+      }
+    }
+
+    function startPollingJobStatus() {
+      clearInterval(pollInterval);
+      pollInterval = setInterval(async () => {
+        try {
+          const res = await apiFetch('/api/session/job/status');
+          currentJobStatus = res.status;
+          currentSession.items = res.items;
+          updateProgressUI(res.status);
+          renderWorkspaceItems();
+
+          if (res.status.phase === 'done' || res.status.phase === 'idle') {
+            document.getElementById('start-btn-label').textContent = 'Start pipeline job';
+            document.getElementById('start-job-btn').disabled = false;
+            if (res.status.phase === 'done') {
+              clearInterval(pollInterval);
+            }
+          }
+        } catch (err) {
+          // ignore transient poll errors
+        }
+      }, 1000);
+    }
+
+    function updateProgressUI(st) {
+      if (!st) return;
+      const total = st.total || 0;
+      const prog = st.progress || 0;
+      const pct = total > 0 ? Math.round((prog / total) * 100) : 0;
+      
+      const bar = document.getElementById('progress-bar-inner');
+      bar.style.width = `${pct}%`;
+      if (st.phase === 'running') {
+        bar.className = 'tr-prog';
+        bar.style.background = 'var(--acc)';
+        document.getElementById('phase-dot').style.background = 'var(--acc)';
+        document.getElementById('phase-text').textContent = `Running (${prog}/${total})`;
+      } else if (st.phase === 'done') {
+        bar.className = '';
+        bar.style.background = 'var(--ok)';
+        document.getElementById('phase-dot').style.background = 'var(--ok)';
+        document.getElementById('phase-text').textContent = 'Completed';
+      } else {
+        bar.className = '';
+        bar.style.background = 'var(--mut)';
+        document.getElementById('phase-dot').style.background = 'var(--mut)';
+        document.getElementById('phase-text').textContent = 'Ready to start';
+      }
+
+      document.getElementById('cnt-downloaded').textContent = st.downloaded || 0;
+      document.getElementById('cnt-fallbacks').textContent = st.fallbacks || 0;
+      document.getElementById('cnt-skipped').textContent = st.skipped || 0;
+      document.getElementById('cnt-failed').textContent = st.failed || 0;
+    }
+
+    // Render Review Cards
+    function renderWorkspaceItems() {
+      const items = currentSession.items || [];
+      document.getElementById('list-count-badge').textContent = items.length;
+      
+      // Summary text
+      if (items.length > 0) {
+        const preview = items.slice(0, 3).map(it => it.p).join(', ');
+        document.getElementById('list-preview-summary').textContent = preview + (items.length > 3 ? ` and ${items.length - 3} more` : '');
+      } else {
+        document.getElementById('list-preview-summary').textContent = 'No items queued yet';
+      }
+
+      // Filter items
+      const filtered = items.filter(it => {
+        if (activeFilter === 'All') return true;
+        return it.status === activeFilter;
+      });
+
+      // Pagination
+      const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
+      if (currentPage > totalPages) currentPage = totalPages;
+      const startIdx = (currentPage - 1) * itemsPerPage;
+      const slice = filtered.slice(startIdx, startIdx + itemsPerPage);
+
+      document.getElementById('pagination-info').textContent = `Showing ${filtered.length ? startIdx + 1 : 0}-${Math.min(startIdx + itemsPerPage, filtered.length)} of ${filtered.length}`;
+
+      // Build Page Buttons
+      const pageBox = document.getElementById('pagination-pages');
+      pageBox.innerHTML = '';
+      for (let p = 1; p <= totalPages; p++) {
+        const btn = document.createElement('button');
+        btn.className = 'tr-btn tr-ghost mono';
+        btn.textContent = p;
+        btn.style.width = '38px';
+        btn.style.height = '38px';
+        btn.style.borderRadius = '10px';
+        btn.style.border = p === currentPage ? '1px solid var(--acc)' : '1px solid var(--line)';
+        btn.style.background = p === currentPage ? 'var(--acc)' : 'var(--surf)';
+        btn.style.color = p === currentPage ? 'var(--accfg)' : 'var(--fg)';
+        btn.style.fontWeight = '700';
+        btn.onclick = () => { currentPage = p; renderWorkspaceItems(); };
+        pageBox.appendChild(btn);
+      }
+
+      // Aspect ratio
+      const ratioMap = {
+        travel: '16/9',
+        products: '1/1',
+        blog: '3/2',
+        social: '4/5'
+      };
+      const aspect = ratioMap[currentSession.preset || 'travel'] || '16/9';
+
+      const grid = document.getElementById('cards-grid');
+      grid.innerHTML = '';
+
+      if (slice.length === 0) {
+        grid.innerHTML = '<div style="grid-column: 1/-1; padding: 32px; text-align: center; color: var(--mut); font-size: 14px;">No items match this filter.</div>';
+        return;
+      }
+
+      slice.forEach((it, idx) => {
+        const card = document.createElement('div');
+        card.className = 'tr-tile';
+        card.style.border = '1px solid var(--line)';
+        card.style.borderRadius = '16px';
+        card.style.background = 'var(--bg)';
+        card.style.overflow = 'hidden';
+        card.style.animationDelay = `${(idx * 0.05).toFixed(2)}s`;
+
+        let mediaHtml = '';
+        if (it.status === 'pending') {
+          mediaHtml = `<div class="tr-skel" style="aspect-ratio: ${aspect}; width: 100%;"></div>`;
+        } else if (it.status === 'ready' && it.file_url) {
+          mediaHtml = `
+            <div style="aspect-ratio: ${aspect}; width: 100%; position: relative; overflow: hidden; background: #000;">
+              <img src="${it.file_url}" alt="${it.p}" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+              <div style="position: absolute; bottom: 8px; right: 8px; padding: 2px 6px; border-radius: 6px; background: rgba(0,0,0,0.6); color: #fff; font-size: 10px; font-weight: 600;" class="mono">${it.dim || ''}</div>
+            </div>
+          `;
+        } else if (it.status === 'failed') {
+          mediaHtml = `
+            <div style="aspect-ratio: ${aspect}; width: 100%; background: var(--surf2); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: var(--bad); font-weight: 700; font-size: 13px;">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+              No match found
+            </div>
+          `;
+        } else {
+          // Skipped
+          mediaHtml = `
+            <div style="aspect-ratio: ${aspect}; width: 100%; background: var(--surf2); display: flex; align-items: center; justify-content: center; color: var(--acc); font-weight: 700; font-size: 13px;">
+              Skipped (Deduplicated)
+            </div>
+          `;
+        }
+
+        const badgeColors = {
+          ready: { bg: 'var(--surf2)', color: 'var(--ok)', label: 'Ready' },
+          skipped: { bg: 'var(--surf2)', color: 'var(--acc)', label: 'Skipped' },
+          failed: { bg: 'var(--surf2)', color: 'var(--bad)', label: 'Failed' },
+          pending: { bg: 'var(--surf2)', color: 'var(--mut)', label: 'Queued' }
+        };
+        const st = badgeColors[it.status] || badgeColors.pending;
+
+        card.innerHTML = `
+          ${mediaHtml}
+          <div style="padding: 12px 14px;">
+            <div style="font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${it.p}</div>
+            <div style="font-size: 12px; color: var(--mut); margin-top: 2px;">${it.c || 'Universal'}</div>
+            
+            <div style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center;">
+              <span style="padding: 3px 8px; border-radius: 999px; background: ${st.bg}; border: 1px solid var(--line); font-size: 11px; font-weight: 700; color: ${st.color};">${st.label}</span>
+              ${it.provider ? `<span style="padding: 3px 8px; border-radius: 999px; background: var(--surf2); border: 1px solid var(--line); font-size: 11px; font-weight: 600; color: var(--mut);">${it.provider}</span>` : ''}
+              ${it.size_kb ? `<span class="mono" style="font-size: 11px; color: var(--mut);">${it.size_kb} KB</span>` : ''}
+            </div>
+
+            <div style="margin-top: 10px; display: flex; gap: 6px;">
+              ${it.status === 'ready' ? `
+                <button class="tr-btn tr-ghost" onclick="openSwapModal('${it.id}')" style="flex: 1; padding: 7px; border: 1px solid var(--line); border-radius: 8px; background: var(--surf); color: var(--fg); font-weight: 700; font-size: 12px;">Swap image</button>
+              ` : it.status === 'failed' ? `
+                <button class="tr-btn tr-ghost" onclick="retryItemAction('${it.id}')" style="flex: 1; padding: 7px; border: 1px solid var(--line); border-radius: 8px; background: var(--surf); color: var(--fg); font-weight: 700; font-size: 12px;">Retry</button>
+              ` : `
+                <button class="tr-btn tr-ghost" disabled style="flex: 1; padding: 7px; border: 1px solid var(--line); border-radius: 8px; background: var(--surf); color: var(--mut); font-weight: 700; font-size: 12px;">Waiting...</button>
+              `}
+              <button class="tr-btn tr-ghost" onclick="removeItemAction('${it.id}')" aria-label="Remove" style="width: 36px; padding: 7px; border: 1px solid var(--line); border-radius: 8px; background: var(--surf); color: var(--mut); display: flex; align-items: center; justify-content: center;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+              </button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function onFilterChange(val) {
+      activeFilter = val;
+      currentPage = 1;
+      renderWorkspaceItems();
+    }
+
+    function changePage(delta) {
+      currentPage += delta;
+      renderWorkspaceItems();
+    }
+
+    // Card Actions: Swap, Retry, Remove
+    function openSwapModal(itemId) {
+      currentSwapItemId = itemId;
+      const target = currentSession.items.find(x => x.id === itemId);
+      if (!target) return;
+
+      document.getElementById('swap-item-subtitle').textContent = `Candidates for: ${target.p}`;
+      const box = document.getElementById('swap-candidates-grid');
+      box.innerHTML = '';
+
+      const candidates = target.candidates || [];
+      if (candidates.length === 0) {
+        box.innerHTML = '<div style="grid-column: 1/-1; padding: 20px; text-align: center; color: var(--mut);">No alternative candidates cached.</div>';
+      } else {
+        candidates.forEach((cand, cIdx) => {
+          const btn = document.createElement('button');
+          btn.className = 'tr-card';
+          btn.style.padding = '0';
+          btn.style.border = '1px solid var(--line)';
+          btn.style.borderRadius = '14px';
+          btn.style.background = 'var(--bg)';
+          btn.style.overflow = 'hidden';
+          btn.style.textAlign = 'left';
+          btn.onclick = () => selectSwapCandidate(itemId, cIdx);
+
+          btn.innerHTML = `
+            <div style="aspect-ratio: 16/10; width: 100%; position: relative; overflow: hidden; background: #000;">
+              <img src="${cand.preview_url || cand.download_url}" alt="" style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+            <div style="padding: 10px 12px;">
+              <div style="font-weight: 700; font-size: 13px;">Option ${cIdx + 1}</div>
+              <div style="font-size: 11px; color: var(--mut);">${cand.provider} - ${cand.author || 'Creator'}</div>
+            </div>
+          `;
+          box.appendChild(btn);
+        });
+      }
+      openModal('modal-swap');
+    }
+
+    async function selectSwapCandidate(itemId, cIdx) {
+      closeModal('modal-swap');
+      showToast('info', 'Swapping Image', 'Cropping and replacing with selected candidate...');
+      try {
+        const res = await apiFetch('/api/session/item/swap', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ item_id: itemId, candidate_index: cIdx })
+        });
+        const idx = currentSession.items.findIndex(x => x.id === itemId);
+        if (idx !== -1) currentSession.items[idx] = res.item;
+        renderWorkspaceItems();
+        showToast('ok', 'Image Swapped', 'Asset updated successfully.');
+      } catch (err) {
+        showToast('bad', 'Swap Failed', err.message);
+      }
+    }
+
+    async function retryItemAction(itemId) {
+      showToast('info', 'Retrying', 'Searching providers again...');
+      try {
+        const res = await apiFetch('/api/session/item/retry', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ item_id: itemId })
+        });
+        const idx = currentSession.items.findIndex(x => x.id === itemId);
+        if (idx !== -1) currentSession.items[idx] = res.item;
+        renderWorkspaceItems();
+        showToast('ok', 'Retry Succeeded', 'Image processed.');
+      } catch (err) {
+        showToast('bad', 'Retry Failed', err.message);
+      }
+    }
+
+    async function removeItemAction(itemId) {
+      try {
+        await apiFetch(`/api/session/item/${itemId}`, { method: 'DELETE' });
+        currentSession.items = currentSession.items.filter(x => x.id !== itemId);
+        renderWorkspaceItems();
+        showToast('warn', 'Removed', 'Item removed from workspace.');
+      } catch (err) {
+        showToast('bad', 'Error', err.message);
+      }
+    }
+
+    // Exports
+    function downloadZipAction() {
+      window.location.href = '/api/session/export-zip';
+    }
+
+    function downloadCreditsAction() {
+      window.location.href = '/api/session/export-credits';
+    }
+
+    // Session Management Actions
+    function copyRecoveryLink() {
+      if (!currentSession || !currentSession.recovery_token) return;
+      const url = `${window.location.origin}/?recovery=${currentSession.recovery_token}`;
+      navigator.clipboard.writeText(url);
+      toggleSessionMenu();
+      showToast('ok', 'Link Copied', 'Paste on another browser or device to resume.');
+    }
+
+    async function extendSessionAction() {
+      toggleSessionMenu();
+      try {
+        const res = await apiFetch('/api/session/extend', { method: 'POST' });
+        currentSession = res.session;
+        renderSessionUI(currentSession);
+        showToast('ok', 'Session Extended', 'Your data will persist for an additional 24 hours.');
+      } catch (err) {
+        showToast('bad', 'Extend Error', err.message);
+      }
+    }
+
+    function openDeleteModal() {
+      toggleSessionMenu();
+      openModal('modal-delete');
+    }
+
+    async function confirmDeleteDataAction() {
+      closeModal('modal-delete');
+      try {
+        const res = await apiFetch('/api/session/delete', { method: 'POST' });
+        currentSession = res.fresh_session;
+        renderSessionUI(currentSession);
+        renderWorkspaceItems();
+        showToast('warn', 'Session Wiped', 'All files and lists permanently deleted.');
+      } catch (err) {
+        showToast('bad', 'Delete Error', err.message);
+      }
+    }
+
+    // ========================================================
+    // ADMIN CONSOLE JAVASCRIPT
+    // ========================================================
+    async function submitAdminLogin() {
+      const pass = document.getElementById('admin-passkey-input').value;
+      if (!pass) return;
+      try {
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ passkey: pass })
+        });
+        if (!res.ok) throw new Error('Incorrect passkey');
+        const data = await res.json();
+        adminToken = data.token;
+        sessionStorage.setItem('terra_admin_token', adminToken);
+        showAdminDashboard();
+        showToast('ok', 'Admin Verified', 'Welcome to Admin Console.');
+      } catch (err) {
+        showToast('bad', 'Sign In Failed', err.message);
+      }
+    }
+
+    function adminSignOut() {
+      adminToken = null;
+      sessionStorage.removeItem('terra_admin_token');
+      document.getElementById('admin-gate-card').style.display = 'flex';
+      document.getElementById('admin-dashboard').style.display = 'none';
+      showToast('info', 'Signed Out', 'Admin session ended.');
+    }
+
+    function showAdminDashboard() {
+      document.getElementById('admin-gate-card').style.display = 'none';
+      document.getElementById('admin-dashboard').style.display = 'block';
+      loadAdminOverview();
+    }
+
+    function switchAdminSection(sec) {
+      document.querySelectorAll('.admin-tab-pane').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.admin-nav-btn').forEach(el => {
+        el.style.background = 'transparent';
+        el.style.color = 'var(--mut)';
+      });
+
+      const pane = document.getElementById(`admin-sec-${sec}`);
+      const nav = document.getElementById(`adm-nav-${sec}`);
+      if (pane) pane.style.display = 'block';
+      if (nav) {
+        nav.style.background = 'var(--surf2)';
+        nav.style.color = 'var(--fg)';
+      }
+
+      if (sec === 'overview') loadAdminOverview();
+      if (sec === 'providers') loadAdminProviders();
+      if (sec === 'policy') loadAdminPolicy();
+      if (sec === 'queue') loadAdminQueue();
+      if (sec === 'audit') loadAdminAudit();
+    }
+
+    async function loadAdminOverview() {
+      try {
+        const data = await apiFetch('/api/admin/overview');
+        document.getElementById('adm-active-sess').textContent = data.stats.active_sessions;
+        document.getElementById('adm-total-store').textContent = `${data.stats.total_storage_mb} MB`;
+        document.getElementById('adm-jobs-today').textContent = data.stats.jobs_today;
+        document.getElementById('adm-errors-24h').textContent = data.stats.errors_24h;
+
+        // Quotas
+        const pex = data.quota.pexels;
+        const pix = data.quota.pixabay;
+
+        document.getElementById('quota-pex-hour-txt').textContent = `${pex.hourly_used} / ${pex.hourly_limit}`;
+        document.getElementById('quota-pex-hour-bar').style.width = `${Math.min(100, (pex.hourly_used / pex.hourly_limit) * 100)}%`;
+
+        document.getElementById('quota-pex-month-txt').textContent = `${pex.monthly_used.toLocaleString()} / ${pex.monthly_limit.toLocaleString()}`;
+        document.getElementById('quota-pex-month-bar').style.width = `${Math.min(100, (pex.monthly_used / pex.monthly_limit) * 100)}%`;
+
+        document.getElementById('quota-pix-hour-txt').textContent = `${pix.hourly_used} / ${pix.hourly_limit}`;
+        document.getElementById('quota-pix-hour-bar').style.width = `${Math.min(100, (pix.hourly_used / pix.hourly_limit) * 100)}%`;
+      } catch (err) {
+        showToast('bad', 'Admin Error', err.message);
+      }
+    }
+
+    async function loadAdminProviders() {
+      try {
+        const data = await apiFetch('/api/admin/providers');
+        const box = document.getElementById('admin-providers-list');
+        box.innerHTML = '';
+
+        data.providers.forEach((p, idx) => {
+          const card = document.createElement('div');
+          card.style.padding = '22px';
+          card.style.border = '1px solid var(--line)';
+          card.style.borderRadius = '20px';
+          card.style.background = 'var(--surf)';
+          card.style.boxShadow = 'var(--shadow)';
+
+          card.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+              <div>
+                <h3 style="font-size: 18px; font-weight: 700;">${p.name}</h3>
+                <div style="font-size: 12px; color: var(--mut); margin-top: 2px;">${p.rate_limit_info}</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <label style="font-size: 12px; font-weight: 700;">Enabled</label>
+                <input type="checkbox" id="prov-on-${p.id}" ${p.enabled ? 'checked' : ''} onchange="toggleProviderEnabled('${p.id}', this.checked)" style="width: 20px; height: 20px; accent-color: var(--acc); cursor: pointer;">
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-bottom: 14px;">
+              <input type="password" id="prov-key-${p.id}" value="${p.api_key}" placeholder="Enter ${p.name} API Key" class="tr-in mono" style="flex: 1; padding: 10px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--fg); font-size: 13px;">
+              <button class="tr-btn tr-ghost" onclick="toggleKeyVisibility('${p.id}')" style="padding: 10px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surf2); color: var(--fg); font-size: 12px; font-weight: 700;">Show</button>
+              <button class="tr-btn" onclick="saveProviderKey('${p.id}')" style="padding: 10px 16px; border-radius: 10px; background: var(--acc); color: var(--accfg); font-size: 13px; font-weight: 700;">Save</button>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <button class="tr-btn tr-ghost" onclick="testProviderConnectionAction('${p.id}')" style="padding: 8px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surf2); color: var(--fg); font-size: 12px; font-weight: 700;">Test connection</button>
+              <span id="prov-test-res-${p.id}" class="mono" style="font-size: 12px; color: var(--mut);"></span>
+            </div>
+          `;
+          box.appendChild(card);
+        });
+      } catch (err) {
+        showToast('bad', 'Admin Error', err.message);
+      }
+    }
+
+    function toggleKeyVisibility(provId) {
+      const input = document.getElementById(`prov-key-${provId}`);
+      if (input.type === 'password') {
+        input.type = 'text';
+      } else {
+        input.type = 'password';
+      }
+    }
+
+    async function saveProviderKey(provId) {
+      const keyVal = document.getElementById(`prov-key-${provId}`).value;
+      try {
+        await apiFetch('/api/admin/providers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify([{ id: provId, api_key: keyVal }])
+        });
+        showToast('ok', 'Key Saved', `${provId.toUpperCase()} key updated.`);
+      } catch (err) {
+        showToast('bad', 'Save Error', err.message);
+      }
+    }
+
+    async function toggleProviderEnabled(provId, enabled) {
+      try {
+        await apiFetch('/api/admin/providers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify([{ id: provId, enabled }])
+        });
+        showToast('ok', 'Provider Updated', `${provId} ${enabled ? 'enabled' : 'disabled'}.`);
+      } catch (err) {
+        showToast('bad', 'Error', err.message);
+      }
+    }
+
+    async function testProviderConnectionAction(provId) {
+      const keyVal = document.getElementById(`prov-key-${provId}`).value;
+      const resSpan = document.getElementById(`prov-test-res-${provId}`);
+      resSpan.textContent = 'Testing...';
+      resSpan.style.color = 'var(--mut)';
+
+      try {
+        const res = await apiFetch('/api/admin/providers/test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: provId, api_key: keyVal })
+        });
+        if (res.success) {
+          resSpan.textContent = `OK (${res.latency_ms}ms) - ${res.message}`;
+          resSpan.style.color = 'var(--ok)';
+          showToast('ok', 'Connection Verified', res.message);
+        } else {
+          resSpan.textContent = res.message;
+          resSpan.style.color = 'var(--bad)';
+          showToast('bad', 'Connection Failed', res.message);
+        }
+      } catch (err) {
+        resSpan.textContent = err.message;
+        resSpan.style.color = 'var(--bad)';
+      }
+    }
+
+    async function loadAdminPolicy() {
+      try {
+        const cfg = await apiFetch('/api/admin/policy');
+        document.getElementById('pol-ttl').value = cfg.policy.ttl_hours || 24;
+        document.getElementById('pol-max-rows').value = cfg.policy.max_rows || 500;
+        document.getElementById('pol-max-jobs').value = cfg.policy.max_jobs_per_day || 5;
+        document.getElementById('pol-max-store').value = cfg.policy.max_storage_mb || 200;
+
+        document.getElementById('def-width').value = cfg.defaults.width || 1920;
+        document.getElementById('def-quality').value = cfg.defaults.quality || 85;
+        document.getElementById('def-concurrency').value = cfg.defaults.concurrency || 5;
+      } catch (err) {
+        showToast('bad', 'Policy Error', err.message);
+      }
+    }
+
+    async function saveAdminPolicyAction() {
+      const payload = {
+        admin_passkey: 'admin123',
+        policy: {
+          ttl_hours: parseInt(document.getElementById('pol-ttl').value),
+          max_rows: parseInt(document.getElementById('pol-max-rows').value),
+          max_jobs_per_day: parseInt(document.getElementById('pol-max-jobs').value),
+          max_storage_mb: parseInt(document.getElementById('pol-max-store').value),
+          bot_check: true
+        },
+        defaults: {
+          width: parseInt(document.getElementById('def-width').value),
+          quality: parseInt(document.getElementById('def-quality').value),
+          concurrency: parseInt(document.getElementById('def-concurrency').value),
+          retry_count: 2
+        }
+      };
+      try {
+        await apiFetch('/api/admin/policy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        showToast('ok', 'Policy Saved', 'Guest limits and defaults updated.');
+      } catch (err) {
+        showToast('bad', 'Error', err.message);
+      }
+    }
+
+    async function loadAdminQueue() {
+      try {
+        const data = await apiFetch('/api/admin/queue');
+        const tbody = document.getElementById('admin-queue-tbody');
+        tbody.innerHTML = '';
+
+        if (!data.jobs || data.jobs.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" style="padding: 24px; text-align: center; color: var(--mut);">No recent jobs in queue.</td></tr>';
+          return;
+        }
+
+        data.jobs.forEach(j => {
+          const tr = document.createElement('tr');
+          tr.style.borderBottom = '1px solid var(--line)';
+          const stColor = j.status === 'done' ? 'var(--ok)' : (j.status === 'running' ? 'var(--acc)' : 'var(--bad)');
+
+          tr.innerHTML = `
+            <td style="padding: 12px 16px; font-weight: 700;">${j.job_id}</td>
+            <td style="padding: 12px 16px;" class="mono">${j.masked_session}</td>
+            <td style="padding: 12px 16px;">${j.total} items (${j.ready} ready)</td>
+            <td style="padding: 12px 16px;">${j.provider}</td>
+            <td style="padding: 12px 16px;"><span style="color: ${stColor}; font-weight: 700;">${j.status.toUpperCase()}</span></td>
+            <td style="padding: 12px 16px; color: var(--mut);" class="mono">${j.timestamp}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        showToast('bad', 'Queue Error', err.message);
+      }
+    }
+
+    async function purgeExpiredAction() {
+      try {
+        const res = await apiFetch('/api/admin/purge', { method: 'POST' });
+        showToast('ok', 'Purge Complete', `Purged ${res.purged_count} sessions, freed ${res.bytes_freed_mb} MB.`);
+        loadAdminQueue();
+        loadAdminOverview();
+      } catch (err) {
+        showToast('bad', 'Purge Error', err.message);
+      }
+    }
+
+    async function loadAdminAudit() {
+      try {
+        const data = await apiFetch('/api/admin/audit');
+        const box = document.getElementById('admin-audit-list');
+        box.innerHTML = '';
+
+        data.audit_log.forEach(item => {
+          const row = document.createElement('div');
+          row.style.padding = '14px 18px';
+          row.style.border = '1px solid var(--line)';
+          row.style.borderRadius = '14px';
+          row.style.background = 'var(--surf)';
+          row.style.display = 'flex';
+          row.style.justifyContent = 'space-between';
+          row.style.alignItems = 'center';
+          row.style.gap = '14px';
+
+          row.innerHTML = `
+            <div>
+              <div style="font-weight: 700; font-size: 14px;">${item.a}</div>
+              <div style="font-size: 12px; color: var(--mut); margin-top: 2px;">${item.d}</div>
+            </div>
+            <div class="mono" style="font-size: 12px; color: var(--mut);">${item.t}</div>
+          `;
+          box.appendChild(row);
+        });
+      } catch (err) {
+        showToast('bad', 'Audit Error', err.message);
+      }
+    }
+
+    // Initialize application when DOM is ready
+    document.addEventListener('DOMContentLoaded', initApp);
+  </script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+[
+  {
+    "id": "pexels",
+    "name": "Pexels API",
+    "type": "pexels",
+    "api_key": "",
+    "enabled": true,
+    "priority": 1,
+    "rate_limit_info": "200 req/hr (Free)"
+  },
+  {
+    "id": "pixabay",
+    "name": "Pixabay API",
+    "type": "pixabay",
+    "api_key": "",
+    "enabled": true,
+    "priority": 2,
+    "rate_limit_info": "5000 req/hr (Free)"
+  },
+  {
+    "id": "unsplash",
+    "name": "Unsplash API",
+    "type": "unsplash",
+    "api_key": "",
+    "enabled": false,
+    "priority": 3,
+    "rate_limit_info": "50 req/hr (Demo)"
+  }
+]

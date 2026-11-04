@@ -1,0 +1,14 @@
+[
+  {
+    "t": "Today 10:12",
+    "timestamp": 1793795000.0,
+    "a": "System Initialized",
+    "d": "Terra Studio engine ready"
+  },
+  {
+    "t": "Today 10:15",
+    "timestamp": 1793795100.0,
+    "a": "Saved guest policy",
+    "d": "Session lifetime set to 24h"
+  }
+]

@@ -1,0 +1,19 @@
+# Core Framework & Web Server
+fastapi>=0.110.0
+uvicorn[standard]>=0.28.0
+pydantic>=2.5.0
+python-multipart>=0.0.9
+
+# Asynchronous Networking & File I/O
+aiohttp>=3.9.0
+aiofiles>=23.2.0
+
+# Image Processing & Media Pipeline
+pillow>=10.0.0
+
+# Data Processing & Batch Utilities
+pandas>=2.0.0
+tqdm>=4.66.0
+
+# Environment Configuration
+python-dotenv>=1.0.0

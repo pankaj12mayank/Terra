@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  terra-studio:
+    build: .
+    container_name: terra_image_studio
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PEXELS_API_KEY=${PEXELS_API_KEY:-}
+      - PIXABAY_API_KEY=${PIXABAY_API_KEY:-}
+      - ADMIN_PASSKEY=${ADMIN_PASSKEY:-admin123}
+    volumes:
+      - ./sessions:/app/sessions
+      - ./downloads:/app/downloads
+      - ./providers_config.json:/app/providers_config.json
+      - ./admin_config.json:/app/admin_config.json
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/session"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
