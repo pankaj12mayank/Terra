@@ -5,66 +5,86 @@ aspect ratio presets, interactive candidate swapping, ZIP packaging with credits
 and privacy-sealed admin console.
 """
 
-import os
-import sys
-import time
-import json
-import uuid
 import asyncio
-from typing import Optional, Dict, Any, List
+from contextlib import asynccontextmanager
+import json
+import os
+import socket
+import sys
+import threading
+import time
+from typing import Any, Dict, List, Optional
+import uuid
+import webbrowser
 
 from fastapi import (
-    FastAPI,
-    HTTPException,
     BackgroundTasks,
+    Cookie,
+    FastAPI,
+    Header,
+    HTTPException,
+    Query,
     Request,
     Response,
-    Cookie,
-    Header,
-    Query
 )
-from fastapi.responses import FileResponse, PlainTextResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, PlainTextResponse
 from pydantic import BaseModel
+import uvicorn
 
-# Ensure current folder is in python path
+# Local imports
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 if CURRENT_DIR not in sys.path:
     sys.path.insert(0, CURRENT_DIR)
 
-from engine import (
-    PROJECT_DIR,
+from engine import (  # noqa: E402
     PRESETS,
-    load_providers_config,
-    save_providers_config,
-    test_provider_connection,
-    search_with_fallback,
-    fetch_image_bytes,
-    crop_and_resize_image,
-    build_session_zip,
-    load_quota_tracker,
+    PROJECT_DIR,
     append_audit_log,
+    build_session_zip,
+    crop_and_resize_image,
+    fetch_image_bytes,
     get_audit_log,
-    sanitize_filename
+    load_providers_config,
+    load_quota_tracker,
+    sanitize_filename,
+    save_providers_config,
+    search_with_fallback,
+    test_provider_connection,
 )
-
-from session_manager import (
-    SESSIONS_DIR,
-    get_or_create_session,
-    load_session,
-    save_session,
+from session_manager import (  # noqa: E402
     delete_session,
     extend_session,
-    purge_expired_sessions,
     get_all_active_sessions_summary,
-    get_session_dir
+    get_or_create_session,
+    get_session_dir,
+    load_session,
+    purge_expired_sessions,
+    save_session,
 )
+
+
+@asynccontextmanager
+async def lifespan(app_instance: FastAPI):
+    """Periodic background worker to purge expired guest sessions."""
+    async def cleaner_loop():
+        while True:
+            try:
+                purge_expired_sessions()
+            except Exception:
+                pass
+            await asyncio.sleep(600)  # Every 10 minutes
+
+    cleaner_task = asyncio.create_task(cleaner_loop())
+    yield
+    cleaner_task.cancel()
+
 
 app = FastAPI(
     title="Terra Image Studio",
     description="Multipurpose Image Extraction Engine & Guest Workspace",
-    version="3.0.0"
+    version="3.0.0",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -164,9 +184,14 @@ def resolve_session(
     recovery: Optional[str] = Query(None)
 ) -> Dict[str, Any]:
     """Resolve or initialize isolated guest session."""
-    target_sid = session_header or session_cookie
+    target_sid = (
+        session_header
+        or request.headers.get("X-Session-ID")
+        or session_cookie
+        or request.cookies.get("terra_session")
+    )
     session_data = get_or_create_session(session_id=target_sid, recovery_token=recovery)
-    
+
     # Refresh cookie
     response.set_cookie(
         key="terra_session",
@@ -177,24 +202,6 @@ def resolve_session(
         path="/"
     )
     return session_data
-
-
-# -------------------------------------------------------------
-# Background Cleaner
-# -------------------------------------------------------------
-
-@app.on_event("startup")
-async def startup_cleaner():
-    """Start periodic background task to purge expired sessions."""
-    async def cleaner_loop():
-        while True:
-            try:
-                purge_expired_sessions()
-            except Exception:
-                pass
-            await asyncio.sleep(600)  # Every 10 minutes
-
-    asyncio.create_task(cleaner_loop())
 
 
 # -------------------------------------------------------------
@@ -862,7 +869,6 @@ async def get_admin_overview():
     total_jobs_today = sum(s.get("jobs_today", 0) for s in summaries)
 
     # 7-day usage estimates
-    days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
     bars = [
         {"w": "Mon", "v": 420},
         {"w": "Tue", "v": 610},
@@ -1023,11 +1029,6 @@ async def root():
 
 
 if __name__ == "__main__":
-    import socket
-    import webbrowser
-    import threading
-    import uvicorn
-
     def _find_port(start: int = 8000, max_tries: int = 20) -> int:
         for p in range(start, start + max_tries):
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -1036,7 +1037,7 @@ if __name__ == "__main__":
                     return p
         return start
 
-    port = int(os.getenv("PORT", 0)) or _find_port(8000)
+    port = int(os.getenv("PORT", "0")) or _find_port(8000)
     url = f"http://localhost:{port}"
 
     print("\n" + "=" * 54)
@@ -1044,11 +1045,11 @@ if __name__ == "__main__":
     print("=" * 54)
     print(f"  Web Studio:   {url}")
     print(f"  API Docs:     {url}/docs")
-    print(f"  Admin Pass:   admin123")
+    print("  Admin Pass:   admin123")
     print("=" * 54)
     print("  Server is running. Press Ctrl+C to stop.\n")
 
-    def _open_browser():
+    def _open_browser() -> None:
         time.sleep(1.0)
         try:
             webbrowser.open(url)
