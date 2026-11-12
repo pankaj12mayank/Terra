@@ -1020,3 +1020,41 @@ async def get_audit_log_endpoint():
 async def root():
     """Serve Terra Studio Unified Web UI."""
     return FileResponse(os.path.join(PROJECT_DIR, "index.html"))
+
+
+if __name__ == "__main__":
+    import socket
+    import webbrowser
+    import threading
+    import uvicorn
+
+    def _find_port(start: int = 8000, max_tries: int = 20) -> int:
+        for p in range(start, start + max_tries):
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.settimeout(0.3)
+                if s.connect_ex(("127.0.0.1", p)) != 0:
+                    return p
+        return start
+
+    port = int(os.getenv("PORT", 0)) or _find_port(8000)
+    url = f"http://localhost:{port}"
+
+    print("\n" + "=" * 54)
+    print("      TERRA IMAGE STUDIO • MULTIPURPOSE ENGINE       ")
+    print("=" * 54)
+    print(f"  Web Studio:   {url}")
+    print(f"  API Docs:     {url}/docs")
+    print(f"  Admin Pass:   admin123")
+    print("=" * 54)
+    print("  Server is running. Press Ctrl+C to stop.\n")
+
+    def _open_browser():
+        time.sleep(1.0)
+        try:
+            webbrowser.open(url)
+        except Exception:
+            pass
+
+    threading.Thread(target=_open_browser, daemon=True).start()
+    uvicorn.run("server:app", host="127.0.0.1", port=port, log_level="info", reload=False)
+
