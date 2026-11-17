@@ -20,6 +20,7 @@ import webbrowser
 from fastapi import (
     BackgroundTasks,
     Cookie,
+    Depends,
     FastAPI,
     Header,
     HTTPException,
@@ -98,6 +99,7 @@ app.add_middleware(
 ADMIN_CONFIG_FILE = os.path.join(PROJECT_DIR, "admin_config.json")
 ACTIVE_JOBS: Dict[str, Dict[str, Any]] = {}
 JOB_HISTORY: List[Dict[str, Any]] = []
+VALID_ADMIN_TOKENS: set = set()
 
 
 def load_admin_config() -> Dict[str, Any]:
@@ -146,6 +148,7 @@ class ItemModel(BaseModel):
 
 class SetItemsModel(BaseModel):
     items: List[ItemModel]
+    append: bool = False
 
 
 class SwapCandidateModel(BaseModel):
@@ -166,10 +169,35 @@ class ProviderUpdateModel(BaseModel):
     api_key: Optional[str] = None
     enabled: Optional[bool] = None
     priority: Optional[int] = None
+    type: Optional[str] = None
 
 
 class ProviderOrderModel(BaseModel):
     order: List[str]
+
+
+class ProviderAddModel(BaseModel):
+    name: str
+    type: str = "custom"
+    id: Optional[str] = None
+    api_key: str = ""
+    enabled: bool = True
+    rate_limit_info: str = ""
+    attribution: bool = True
+
+
+class ProviderRemoveModel(BaseModel):
+    id: str
+
+
+# -------------------------------------------------------------
+# Admin Authentication Guard
+# -------------------------------------------------------------
+
+def require_admin(x_admin_token: Optional[str] = Header(None)) -> None:
+    """Verify the bearer token issued by /api/admin/login."""
+    if not x_admin_token or x_admin_token not in VALID_ADMIN_TOKENS:
+        raise HTTPException(status_code=401, detail="Admin authentication required.")
 
 
 # -------------------------------------------------------------
@@ -190,7 +218,20 @@ def resolve_session(
         or session_cookie
         or request.cookies.get("terra_session")
     )
-    session_data = get_or_create_session(session_id=target_sid, recovery_token=recovery)
+
+    # Honour the configured guest policy (TTL + recovery-link toggle)
+    policy = load_admin_config().get("policy", {})
+    if not isinstance(policy, dict):
+        policy = {}
+    if policy.get("allow_recovery") is False:
+        recovery = None
+    ttl_hours = policy.get("ttl_hours") or None
+
+    session_data = get_or_create_session(
+        session_id=target_sid,
+        recovery_token=recovery,
+        ttl_hours=ttl_hours
+    )
 
     # Refresh cookie
     response.set_cookie(
@@ -221,10 +262,14 @@ async def get_current_session(
     
     # Check if job is currently running
     active_job = ACTIVE_JOBS.get(sess["session_id"])
+    policy = load_admin_config().get("policy", {})
+    if not isinstance(policy, dict):
+        policy = {}
     return {
         "session": sess,
         "active_job": active_job,
-        "presets": PRESETS
+        "presets": PRESETS,
+        "zip_allowed": policy.get("allow_zip", True) is not False
     }
 
 
@@ -265,18 +310,20 @@ async def set_items(
     terra_session: Optional[str] = Cookie(None),
     x_session_id: Optional[str] = Header(None)
 ):
-    """Replace list of items in the workspace."""
+    """Replace (or append to) the item list in the workspace."""
     sess = resolve_session(request, response, terra_session, x_session_id)
     admin_cfg = load_admin_config()
     max_rows = admin_cfg.get("policy", {}).get("max_rows", 500)
 
-    if len(req.items) > max_rows:
+    existing = list(sess.get("items", [])) if req.append else []
+    if len(existing) + len(req.items) > max_rows:
         raise HTTPException(status_code=400, detail=f"List exceeds maximum limit of {max_rows} rows.")
 
+    start_idx = len(existing)
     formatted_items = []
     for idx, it in enumerate(req.items):
         formatted_items.append({
-            "id": f"item_{idx + 1}_{uuid.uuid4().hex[:4]}",
+            "id": f"item_{start_idx + idx + 1}_{uuid.uuid4().hex[:4]}",
             "c": it.c.strip(),
             "p": it.p.strip(),
             "status": "pending",
@@ -293,9 +340,12 @@ async def set_items(
             "candidates": []
         })
 
-    sess["items"] = formatted_items
+    if req.append:
+        sess["items"] = existing + formatted_items
+    else:
+        sess["items"] = formatted_items
     save_session(sess)
-    return {"success": True, "count": len(formatted_items), "items": formatted_items}
+    return {"success": True, "count": len(sess["items"]), "items": sess["items"]}
 
 
 @app.post("/api/session/item/add")
@@ -468,7 +518,11 @@ async def execute_session_job(session_id: str, job_id: str):
 
     append_audit_log("Job Started", f"Job {job_id} started for session {session_id[:6]}... ({total} items)")
 
+    cancelled = False
     for idx, it in enumerate(items):
+        if ACTIVE_JOBS.get(session_id, {}).get("cancel_requested"):
+            cancelled = True
+            break
         ACTIVE_JOBS[session_id]["progress"] = idx + 1
         query_subject = f"{it.get('c', '')} {it.get('p', '')}".strip()
         ACTIVE_JOBS[session_id]["current_item"] = query_subject
@@ -546,6 +600,7 @@ async def execute_session_job(session_id: str, job_id: str):
 
     # Job Completion & ZIP packaging
     ACTIVE_JOBS[session_id]["phase"] = "done"
+    ACTIVE_JOBS[session_id]["stopped"] = cancelled
     sess["jobs_today"] = sess.get("jobs_today", 0) + 1
     sess["last_job_id"] = job_id
     save_session(sess)
@@ -553,17 +608,44 @@ async def execute_session_job(session_id: str, job_id: str):
     # Build ZIP archive
     build_session_zip(session_id, sess, s_dir)
 
-    JOB_HISTORY.insert(0, {
-        "job_id": job_id,
-        "masked_session": session_id[:4] + "..." + session_id[-3:],
-        "total": total,
-        "ready": downloaded_count,
-        "failed": failed_count,
-        "provider": "Pexels, Pixabay" if fallback_count > 0 else (source_pref.capitalize() if source_pref != "auto" else "Pexels"),
-        "status": "done" if failed_count == 0 else ("done" if downloaded_count > 0 else "failed"),
-        "timestamp": time.strftime("%H:%M:%S")
-    })
-    append_audit_log("Job Completed", f"Job {job_id} finished: {downloaded_count} ready, {failed_count} failed")
+    # Update (or create) the live JOB_HISTORY entry started by /job/start
+    provider_label = (
+        "Pexels, Pixabay" if fallback_count > 0
+        else (source_pref.capitalize() if source_pref != "auto" else "Pexels")
+    )
+    if cancelled:
+        status = "stopped"
+    elif failed_count == 0:
+        status = "done"
+    else:
+        status = "done" if downloaded_count > 0 else "failed"
+
+    hist = next((j for j in JOB_HISTORY if j.get("job_id") == job_id), None)
+    if hist is None:
+        hist = {
+            "job_id": job_id,
+            "masked_session": session_id[:4] + "..." + session_id[-3:],
+            "total": total,
+            "ready": 0,
+            "failed": 0,
+            "provider": provider_label,
+            "status": status,
+            "timestamp": time.strftime("%H:%M:%S")
+        }
+        JOB_HISTORY.insert(0, hist)
+    else:
+        hist.update({
+            "total": total,
+            "ready": downloaded_count,
+            "failed": failed_count,
+            "provider": provider_label,
+            "status": status
+        })
+
+    if cancelled:
+        append_audit_log("Job Stopped", f"Job {job_id} stopped after {downloaded_count} ready images")
+    else:
+        append_audit_log("Job Completed", f"Job {job_id} finished: {downloaded_count} ready, {failed_count} failed")
 
 
 @app.post("/api/session/job/start")
@@ -592,6 +674,20 @@ async def start_job(
         raise HTTPException(status_code=400, detail="List is empty. Add entries before starting.")
 
     job_id = f"J-{int(time.time()) % 10000:04d}"
+
+    # Publish a live "running" entry so the admin Jobs table is real-time
+    src_pref = sess.get("source", "auto")
+    JOB_HISTORY.insert(0, {
+        "job_id": job_id,
+        "masked_session": sid[:4] + "..." + sid[-3:],
+        "total": len(items),
+        "ready": 0,
+        "failed": 0,
+        "provider": "Pexels, Pixabay" if src_pref == "auto" else src_pref.capitalize(),
+        "status": "running",
+        "timestamp": time.strftime("%H:%M:%S")
+    })
+
     bg_tasks.add_task(execute_session_job, session_id=sid, job_id=job_id)
 
     return {"success": True, "job_id": job_id, "total": len(items)}
@@ -619,6 +715,24 @@ async def get_job_status(
         "current_item": ""
     })
     return {"status": active, "items": sess.get("items", [])}
+
+
+@app.post("/api/session/job/cancel")
+async def cancel_own_job(
+    request: Request,
+    response: Response,
+    terra_session: Optional[str] = Cookie(None),
+    x_session_id: Optional[str] = Header(None)
+):
+    """Guest-facing: request graceful stop of THIS session's running job."""
+    sess = resolve_session(request, response, terra_session, x_session_id)
+    sid = sess["session_id"]
+    job = ACTIVE_JOBS.get(sid)
+    if job and job.get("phase") == "running":
+        job["cancel_requested"] = True
+        append_audit_log("Job Stopped", f"Job {job.get('job_id')} stopped by guest {sid[:4]}...")
+        return {"success": True, "message": "Cancellation requested."}
+    raise HTTPException(status_code=404, detail="No running job for this session.")
 
 
 # -------------------------------------------------------------
@@ -776,6 +890,10 @@ async def download_session_zip(
     x_session_id: Optional[str] = Header(None)
 ):
     """Download single ZIP package containing all images and credits.txt."""
+    policy = load_admin_config().get("policy", {})
+    if isinstance(policy, dict) and policy.get("allow_zip") is False:
+        raise HTTPException(status_code=403, detail="ZIP downloads are disabled by the administrator.")
+
     sess = resolve_session(request, response, terra_session, x_session_id)
     sid = sess["session_id"]
     s_dir = get_session_dir(sid)
@@ -853,12 +971,13 @@ async def admin_login(req: AdminLoginModel):
         raise HTTPException(status_code=401, detail="Invalid admin passkey.")
 
     admin_token = f"adm_{uuid.uuid4().hex}"
+    VALID_ADMIN_TOKENS.add(admin_token)
     append_audit_log("Admin Signed In", "Successful administrator authentication")
     return {"success": True, "token": admin_token}
 
 
 @app.get("/api/admin/overview")
-async def get_admin_overview():
+async def get_admin_overview(_: None = Depends(require_admin)):
     """Retrieve aggregate usage, sparklines, and provider quota meters."""
     summaries = get_all_active_sessions_summary()
     quota = load_quota_tracker()
@@ -904,7 +1023,7 @@ async def get_admin_overview():
 
 
 @app.get("/api/admin/providers")
-async def get_admin_providers():
+async def get_admin_providers(_: None = Depends(require_admin)):
     """Retrieve provider list with masked keys."""
     providers = load_providers_config()
     safe_list = []
@@ -925,7 +1044,7 @@ async def get_admin_providers():
 
 
 @app.post("/api/admin/providers")
-async def update_admin_providers(updates: List[ProviderUpdateModel]):
+async def update_admin_providers(updates: List[ProviderUpdateModel], _: None = Depends(require_admin)):
     """Update provider keys, enabled states, or priorities."""
     current = load_providers_config()
     for upd in updates:
@@ -944,7 +1063,7 @@ async def update_admin_providers(updates: List[ProviderUpdateModel]):
 
 
 @app.post("/api/admin/providers/order")
-async def reorder_providers(req: ProviderOrderModel):
+async def reorder_providers(req: ProviderOrderModel, _: None = Depends(require_admin)):
     """Reorder primary and fallback precedence."""
     current = load_providers_config()
     order_map = {prov_id: idx + 1 for idx, prov_id in enumerate(req.order)}
@@ -958,38 +1077,53 @@ async def reorder_providers(req: ProviderOrderModel):
 
 
 @app.post("/api/admin/providers/test")
-async def test_provider_endpoint(provider: ProviderUpdateModel):
-    """Test live connection of a provider."""
+async def test_provider_endpoint(provider: ProviderUpdateModel, _: None = Depends(require_admin)):
+    """Test live connection of a provider (saved or not-yet-added wizard drafts)."""
     current = load_providers_config()
     target = next((p for p in current if p.get("id") == provider.id), None)
-    if not target:
-        raise HTTPException(status_code=404, detail="Provider not found.")
 
-    test_payload = dict(target)
-    if provider.api_key and not provider.api_key.startswith("***"):
-        test_payload["api_key"] = provider.api_key.strip()
+    if target:
+        test_payload = dict(target)
+        if provider.api_key and not provider.api_key.startswith("***"):
+            test_payload["api_key"] = provider.api_key.strip()
+    else:
+        # Wizard flow: the provider has not been saved yet
+        test_payload = {
+            "id": provider.id,
+            "type": provider.type or provider.id or "custom",
+            "api_key": (provider.api_key or "").strip()
+        }
 
     result = await test_provider_connection(test_payload)
     return result
 
 
 @app.get("/api/admin/policy")
-async def get_admin_policy():
-    """Retrieve guest policy and processing defaults."""
+async def get_admin_policy(_: None = Depends(require_admin)):
+    """Retrieve guest policy and processing defaults (never the passkey)."""
     cfg = load_admin_config()
-    return cfg
+    return {k: v for k, v in cfg.items() if k != "admin_passkey"}
 
 
 @app.post("/api/admin/policy")
-async def save_admin_policy(cfg: Dict[str, Any]):
-    """Save guest policy and processing defaults."""
-    save_admin_config(cfg)
+async def save_admin_policy(cfg: Dict[str, Any], _: None = Depends(require_admin)):
+    """Save guest policy and processing defaults (merged into the stored config)."""
+    current = load_admin_config()
+    for key, value in cfg.items():
+        if key in ("policy", "defaults") and isinstance(value, dict):
+            current.setdefault(key, {}).update(value)
+        elif key == "admin_passkey" and not value:
+            continue
+        else:
+            current[key] = value
+
+    save_admin_config(current)
     append_audit_log("Guest Policy Saved", "Updated session lifetimes and rate limits")
-    return {"success": True, "config": cfg}
+    return {"success": True, "config": {k: v for k, v in current.items() if k != "admin_passkey"}}
 
 
 @app.get("/api/admin/queue")
-async def get_admin_queue():
+async def get_admin_queue(_: None = Depends(require_admin)):
     """Retrieve queue monitor entries. Strictly anonymized (NO guest search terms or images!)."""
     summaries = get_all_active_sessions_summary()
     return {
@@ -1000,7 +1134,7 @@ async def get_admin_queue():
 
 
 @app.post("/api/admin/purge")
-async def purge_sessions_endpoint():
+async def purge_sessions_endpoint(_: None = Depends(require_admin)):
     """Admin action: Purge all expired sessions and reclaim storage."""
     res = purge_expired_sessions()
     freed_mb = round(res["bytes_freed"] / (1024 * 1024), 2)
@@ -1013,9 +1147,63 @@ async def purge_sessions_endpoint():
 
 
 @app.get("/api/admin/audit")
-async def get_audit_log_endpoint():
+async def get_audit_log_endpoint(_: None = Depends(require_admin)):
     """Retrieve system audit log."""
     return {"audit_log": get_audit_log()}
+
+
+@app.post("/api/admin/job/cancel/{job_id}")
+async def cancel_admin_job(job_id: str, _: None = Depends(require_admin)):
+    """Request graceful cancellation of a running background job."""
+    for _sid, job in ACTIVE_JOBS.items():
+        if job.get("job_id") == job_id and job.get("phase") == "running":
+            job["cancel_requested"] = True
+            append_audit_log("Job Stopped", f"Job {job_id} stopped by administrator")
+            return {"success": True, "message": "Cancellation requested."}
+    raise HTTPException(status_code=404, detail="Job is not running.")
+
+
+@app.post("/api/admin/providers/add")
+async def add_admin_provider(req: ProviderAddModel, _: None = Depends(require_admin)):
+    """Register a new image source (wizard 'Add provider')."""
+    current = load_providers_config()
+    base_id = sanitize_filename(req.id or req.name).lower().replace(" ", "_") or "provider"
+    prov_id = base_id
+    suffix = 2
+    while any(p.get("id") == prov_id for p in current):
+        prov_id = f"{base_id}_{suffix}"
+        suffix += 1
+
+    next_priority = max([p.get("priority", 0) for p in current], default=0) + 1
+    current.append({
+        "id": prov_id,
+        "name": (req.name or prov_id).strip(),
+        "type": (req.type or "custom").lower(),
+        "api_key": (req.api_key or "").strip(),
+        "enabled": bool(req.enabled),
+        "priority": next_priority,
+        "rate_limit_info": req.rate_limit_info or "Custom source",
+        "attribution": bool(req.attribution)
+    })
+    save_providers_config(current)
+    append_audit_log("Provider Added", f"{req.name} connected as a fallback source")
+    return {"success": True, "id": prov_id}
+
+
+@app.post("/api/admin/providers/remove")
+async def remove_admin_provider(req: ProviderRemoveModel, _: None = Depends(require_admin)):
+    """Remove a custom image source from the rotation."""
+    if req.id in ("pexels", "pixabay"):
+        raise HTTPException(status_code=400, detail="Built-in providers cannot be removed. Disable them instead.")
+
+    current = load_providers_config()
+    remaining = [p for p in current if p.get("id") != req.id]
+    if len(remaining) == len(current):
+        raise HTTPException(status_code=404, detail="Provider not found.")
+
+    save_providers_config(remaining)
+    append_audit_log("Provider Removed", f"{req.id} removed from the provider rotation")
+    return {"success": True}
 
 
 # -------------------------------------------------------------
@@ -1024,7 +1212,19 @@ async def get_audit_log_endpoint():
 
 @app.get("/")
 async def root():
-    """Serve Terra Studio Unified Web UI."""
+    """Serve Terra Studio Unified Web UI (guest landing)."""
+    return FileResponse(os.path.join(PROJECT_DIR, "index.html"))
+
+
+@app.get("/admin")
+async def admin_page():
+    """Serve Terra Studio Web UI (opens directly on the Admin Console)."""
+    return FileResponse(os.path.join(PROJECT_DIR, "index.html"))
+
+
+@app.get("/themes")
+async def themes_page():
+    """Serve Terra Studio Web UI (opens directly on Logo & Themes)."""
     return FileResponse(os.path.join(PROJECT_DIR, "index.html"))
 
 

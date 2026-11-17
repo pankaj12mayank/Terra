@@ -130,7 +130,8 @@ def create_session(ttl_hours: int = DEFAULT_TTL_HOURS) -> Dict[str, Any]:
 
 def get_or_create_session(
     session_id: Optional[str] = None,
-    recovery_token: Optional[str] = None
+    recovery_token: Optional[str] = None,
+    ttl_hours: Optional[int] = None
 ) -> Dict[str, Any]:
     """Retrieve existing session or create a new one."""
     # 1. Try recovery token
@@ -158,6 +159,8 @@ def get_or_create_session(
             return data
 
     # 3. Create fresh session
+    if ttl_hours:
+        return create_session(ttl_hours=int(ttl_hours))
     return create_session()
 
 

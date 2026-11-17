@@ -5,7 +5,7 @@
     "type": "pexels",
     "api_key": "",
     "enabled": true,
-    "priority": 1,
+    "priority": 2,
     "rate_limit_info": "200 req/hr (Free)"
   },
   {
@@ -14,7 +14,7 @@
     "type": "pixabay",
     "api_key": "",
     "enabled": true,
-    "priority": 2,
+    "priority": 1,
     "rate_limit_info": "5000 req/hr (Free)"
   },
   {

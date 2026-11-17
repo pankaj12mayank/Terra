@@ -52,6 +52,7 @@ Add your free API keys from [Pexels](https://www.pexels.com/api/) and/or [Pixaba
 PEXELS_API_KEY=your_key_here
 PIXABAY_API_KEY=your_key_here
 ADMIN_PASSKEY=admin123
+Emailid = admin@terra.local
 ```
 *(You can also configure keys directly in the Admin Console UI)*
 

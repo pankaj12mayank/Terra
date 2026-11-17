@@ -1,5 +1,533 @@
 [
   {
+    "t": "Nov 17 19:11",
+    "timestamp": 1794922917.557305,
+    "a": "Job Stopped",
+    "d": "Job J-2913 stopped after 0 ready images"
+  },
+  {
+    "t": "Nov 17 19:11",
+    "timestamp": 1794922917.3739958,
+    "a": "Job Stopped",
+    "d": "Job J-2913 stopped by guest s_82..."
+  },
+  {
+    "t": "Nov 17 19:11",
+    "timestamp": 1794922913.6764123,
+    "a": "Job Started",
+    "d": "Job J-2913 started for session s_82e1... (24 items)"
+  },
+  {
+    "t": "Nov 17 19:11",
+    "timestamp": 1794922906.9460769,
+    "a": "Admin Signed In",
+    "d": "Successful administrator authentication"
+  },
+  {
+    "t": "Nov 17 19:10",
+    "timestamp": 1794922850.2255063,
+    "a": "Job Stopped",
+    "d": "Job J-2846 stopped after 0 ready images"
+  },
+  {
+    "t": "Nov 17 19:10",
+    "timestamp": 1794922850.1778247,
+    "a": "Job Stopped",
+    "d": "Job J-2846 stopped by guest s_39..."
+  },
+  {
+    "t": "Nov 17 19:10",
+    "timestamp": 1794922846.259547,
+    "a": "Job Started",
+    "d": "Job J-2846 started for session s_3943... (24 items)"
+  },
+  {
+    "t": "Nov 17 19:10",
+    "timestamp": 1794922837.836749,
+    "a": "Admin Signed In",
+    "d": "Successful administrator authentication"
+  },
+  {
+    "t": "Nov 17 19:09",
+    "timestamp": 1794922768.5359516,
+    "a": "Job Completed",
+    "d": "Job J-2764 finished: 0 ready, 24 failed"
+  },
+  {
+    "t": "Nov 17 19:09",
+    "timestamp": 1794922764.0773165,
+    "a": "Job Started",
+    "d": "Job J-2764 started for session s_01d8... (24 items)"
+  },
+  {
+    "t": "Nov 17 19:09",
+    "timestamp": 1794922756.0522094,
+    "a": "Admin Signed In",
+    "d": "Successful administrator authentication"
+  },
+  {
+    "t": "Nov 17 19:07",
+    "timestamp": 1794922620.4879382,
+    "a": "Admin Signed In",
+    "d": "Successful administrator authentication"
+  },
+  {
+    "t": "Nov 17 19:01",
+    "timestamp": 1794922279.511415,
+    "a": "Admin Signed In",
+    "d": "Successful administrator authentication"
+  },
+  {
+    "t": "Nov 17 19:00",
+    "timestamp": 1794922220.8565547,
+    "a": "Guest Policy Saved",
+    "d": "Updated session lifetimes and rate limits"
+  },
+  {
+    "t": "Nov 17 19:00",
+    "timestamp": 1794922219.9366262,
+    "a": "Guest Policy Saved",
+    "d": "Updated session lifetimes and rate limits"
+  },
+  {
+    "t": "Nov 17 19:00",
+    "timestamp": 1794922218.3309133,
+    "a": "Guest Policy Saved",
+    "d": "Updated session lifetimes and rate limits"
+  },
+  {
+    "t": "Nov 17 19:00",
+    "timestamp": 1794922214.6694536,
+    "a": "Precedence Reordered",
+    "d": "Primary provider set to Pixabay"
+  },
+  {
+    "t": "Nov 17 19:00",
+    "timestamp": 1794922212.4625325,
+    "a": "Admin Signed In",
+    "d": "Successful administrator authentication"
+  },
+  {
+    "t": "Nov 17 19:00",
+    "timestamp": 1794922212.1380217,
+    "a": "Job Completed",
+    "d": "Job J-2206 finished: 0 ready, 29 failed"
+  },
+  {
+    "t": "Nov 17 19:00",
+    "timestamp": 1794922206.968139,
+    "a": "Job Started",
+    "d": "Job J-2206 started for session s_a3f3... (29 items)"
+  },
+  {
+    "t": "Nov 17 19:00",
+    "timestamp": 1794922205.5375443,
+    "a": "Guest Policy Saved",
+    "d": "Updated session lifetimes and rate limits"
+  },
+  {
+    "t": "Nov 17 18:59",
+    "timestamp": 1794922171.270359,
+    "a": "Admin Signed In",
+    "d": "Successful administrator authentication"
+  },
+  {
+    "t": "Nov 17 18:53",
+    "timestamp": 1794921816.1470199,
+    "a": "Admin Signed In",
+    "d": "Successful administrator authentication"
+  },
+  {
+    "t": "Nov 17 18:51",
+    "timestamp": 1794921718.1815517,
+    "a": "Guest Policy Saved",
+    "d": "Updated session lifetimes and rate limits"
+  },
+  {
+    "t": "Nov 17 18:51",
+    "timestamp": 1794921717.2541413,
+    "a": "Guest Policy Saved",
+    "d": "Updated session lifetimes and rate limits"
+  },
+  {
+    "t": "Nov 17 18:51",
+    "timestamp": 1794921715.6891036,
+    "a": "Guest Policy Saved",
+    "d": "Updated session lifetimes and rate limits"
+  },
+  {
+    "t": "Nov 17 18:51",
+    "timestamp": 1794921712.137487,
+    "a": "Precedence Reordered",
+    "d": "Primary provider set to Pexels"
+  },
+  {
+    "t": "Nov 17 18:51",
+    "timestamp": 1794921709.968187,
+    "a": "Admin Signed In",
+    "d": "Successful administrator authentication"
+  },
+  {
+    "t": "Nov 17 18:51",
+    "timestamp": 1794921708.7842083,
+    "a": "Job Completed",
+    "d": "Job J-1704 finished: 0 ready, 29 failed"
+  },
+  {
+    "t": "Nov 17 18:51",
+    "timestamp": 1794921704.0778985,
+    "a": "Job Started",
+    "d": "Job J-1704 started for session s_bb65... (29 items)"
+  },
+  {
+    "t": "Nov 17 18:50",
+    "timestamp": 1794921602.3854942,
+    "a": "Admin Signed In",
+    "d": "Successful administrator authentication"
+  },
+  {
+    "t": "Nov 17 18:44",
+    "timestamp": 1794921265.069337,
+    "a": "Admin Signed In",
+    "d": "Successful administrator authentication"
+  },
+  {
+    "t": "Nov 17 18:42",
+    "timestamp": 1794921169.4577386,
+    "a": "Admin Signed In",
+    "d": "Successful administrator authentication"
+  },
+  {
+    "t": "Nov 17 18:41",
+    "timestamp": 1794921098.9368036,
+    "a": "Admin Signed In",
+    "d": "Successful administrator authentication"
+  },
+  {
+    "t": "Nov 17 18:40",
+    "timestamp": 1794921010.9483364,
+    "a": "Admin Signed In",
+    "d": "Successful administrator authentication"
+  },
+  {
+    "t": "Nov 17 18:38",
+    "timestamp": 1794920906.1608355,
+    "a": "Guest Policy Saved",
+    "d": "Updated session lifetimes and rate limits"
+  },
+  {
+    "t": "Nov 17 18:38",
+    "timestamp": 1794920905.20035,
+    "a": "Guest Policy Saved",
+    "d": "Updated session lifetimes and rate limits"
+  },
+  {
+    "t": "Nov 17 18:38",
+    "timestamp": 1794920903.63353,
+    "a": "Guest Policy Saved",
+    "d": "Updated session lifetimes and rate limits"
+  },
+  {
+    "t": "Nov 17 18:38",
+    "timestamp": 1794920900.1058645,
+    "a": "Precedence Reordered",
+    "d": "Primary provider set to Pixabay"
+  },
+  {
+    "t": "Nov 17 18:38",
+    "timestamp": 1794920897.871494,
+    "a": "Admin Signed In",
+    "d": "Successful administrator authentication"
+  },
+  {
+    "t": "Nov 17 18:38",
+    "timestamp": 1794920896.6336148,
+    "a": "Job Completed",
+    "d": "Job J-0891 finished: 0 ready, 29 failed"
+  },
+  {
+    "t": "Nov 17 18:38",
+    "timestamp": 1794920891.8426776,
+    "a": "Job Started",
+    "d": "Job J-0891 started for session s_6427... (29 items)"
+  },
+  {
+    "t": "Nov 17 18:37",
+    "timestamp": 1794920872.6674583,
+    "a": "Job Completed",
+    "d": "Job J-0872 finished: 0 ready, 1 failed"
+  },
+  {
+    "t": "Nov 17 18:37",
+    "timestamp": 1794920872.6029618,
+    "a": "Job Stopped",
+    "d": "Job J-0872 stopped by administrator"
+  },
+  {
+    "t": "Nov 17 18:37",
+    "timestamp": 1794920872.5188782,
+    "a": "Job Started",
+    "d": "Job J-0872 started for session s_8baa... (1 items)"
+  },
+  {
+    "t": "Nov 17 18:37",
+    "timestamp": 1794920872.4585452,
+    "a": "Admin Signed In",
+    "d": "Successful administrator authentication"
+  },
+  {
+    "t": "Nov 17 18:37",
+    "timestamp": 1794920872.1826425,
+    "a": "Guest Policy Saved",
+    "d": "Updated session lifetimes and rate limits"
+  },
+  {
+    "t": "Nov 17 18:37",
+    "timestamp": 1794920872.142571,
+    "a": "Guest Policy Saved",
+    "d": "Updated session lifetimes and rate limits"
+  },
+  {
+    "t": "Nov 17 18:37",
+    "timestamp": 1794920871.920407,
+    "a": "Admin Signed In",
+    "d": "Successful administrator authentication"
+  },
+  {
+    "t": "Nov 17 18:29",
+    "timestamp": 1794920374.9636176,
+    "a": "Job Completed",
+    "d": "Job J-0371 finished: 0 ready, 24 failed"
+  },
+  {
+    "t": "Nov 17 18:29",
+    "timestamp": 1794920371.0424094,
+    "a": "Job Started",
+    "d": "Job J-0371 started for session s_6bcd... (24 items)"
+  },
+  {
+    "t": "Nov 17 18:29",
+    "timestamp": 1794920346.6609156,
+    "a": "Guest Policy Saved",
+    "d": "Updated session lifetimes and rate limits"
+  },
+  {
+    "t": "Nov 17 18:29",
+    "timestamp": 1794920345.7547507,
+    "a": "Guest Policy Saved",
+    "d": "Updated session lifetimes and rate limits"
+  },
+  {
+    "t": "Nov 17 18:29",
+    "timestamp": 1794920344.2008157,
+    "a": "Guest Policy Saved",
+    "d": "Updated session lifetimes and rate limits"
+  },
+  {
+    "t": "Nov 17 18:29",
+    "timestamp": 1794920340.679682,
+    "a": "Precedence Reordered",
+    "d": "Primary provider set to Pexels"
+  },
+  {
+    "t": "Nov 17 18:28",
+    "timestamp": 1794920338.4896026,
+    "a": "Admin Signed In",
+    "d": "Successful administrator authentication"
+  },
+  {
+    "t": "Nov 17 18:28",
+    "timestamp": 1794920333.7848365,
+    "a": "Job Completed",
+    "d": "Job J-0333 finished: 0 ready, 2 failed"
+  },
+  {
+    "t": "Nov 17 18:28",
+    "timestamp": 1794920333.464644,
+    "a": "Job Started",
+    "d": "Job J-0333 started for session s_ecb0... (2 items)"
+  },
+  {
+    "t": "Nov 17 18:27",
+    "timestamp": 1794920250.1628742,
+    "a": "Guest Policy Saved",
+    "d": "Updated session lifetimes and rate limits"
+  },
+  {
+    "t": "Nov 17 18:27",
+    "timestamp": 1794920246.5462542,
+    "a": "Precedence Reordered",
+    "d": "Primary provider set to Pixabay"
+  },
+  {
+    "t": "Nov 17 18:27",
+    "timestamp": 1794920244.344265,
+    "a": "Admin Signed In",
+    "d": "Successful administrator authentication"
+  },
+  {
+    "t": "Nov 17 18:27",
+    "timestamp": 1794920239.6478655,
+    "a": "Job Completed",
+    "d": "Job J-0239 finished: 0 ready, 2 failed"
+  },
+  {
+    "t": "Nov 17 18:27",
+    "timestamp": 1794920239.3184757,
+    "a": "Job Started",
+    "d": "Job J-0239 started for session s_86bd... (2 items)"
+  },
+  {
+    "t": "Nov 17 18:24",
+    "timestamp": 1794920085.2836077,
+    "a": "Job Completed",
+    "d": "Job J-0085 finished: 0 ready, 1 failed"
+  },
+  {
+    "t": "Nov 17 18:24",
+    "timestamp": 1794920085.1743622,
+    "a": "Job Stopped",
+    "d": "Job J-0085 stopped by administrator"
+  },
+  {
+    "t": "Nov 17 18:24",
+    "timestamp": 1794920085.0984597,
+    "a": "Job Started",
+    "d": "Job J-0085 started for session s_a416... (1 items)"
+  },
+  {
+    "t": "Nov 17 18:24",
+    "timestamp": 1794920085.0692565,
+    "a": "Admin Signed In",
+    "d": "Successful administrator authentication"
+  },
+  {
+    "t": "Nov 17 18:24",
+    "timestamp": 1794920078.337029,
+    "a": "Guest Policy Saved",
+    "d": "Updated session lifetimes and rate limits"
+  },
+  {
+    "t": "Nov 17 18:24",
+    "timestamp": 1794920078.2944279,
+    "a": "Guest Policy Saved",
+    "d": "Updated session lifetimes and rate limits"
+  },
+  {
+    "t": "Nov 17 18:24",
+    "timestamp": 1794920078.0601175,
+    "a": "Admin Signed In",
+    "d": "Successful administrator authentication"
+  },
+  {
+    "t": "Nov 17 18:23",
+    "timestamp": 1794919994.6830459,
+    "a": "Job Stopped",
+    "d": "Job J-9994 stopped after 0 ready images"
+  },
+  {
+    "t": "Nov 17 18:23",
+    "timestamp": 1794919994.680385,
+    "a": "Job Stopped",
+    "d": "Job J-9994 stopped by guest s_78..."
+  },
+  {
+    "t": "Nov 17 18:23",
+    "timestamp": 1794919994.3561149,
+    "a": "Job Started",
+    "d": "Job J-9994 started for session s_7862... (20 items)"
+  },
+  {
+    "t": "Nov 17 18:22",
+    "timestamp": 1794919976.6399398,
+    "a": "Job Completed",
+    "d": "Job J-9976 finished: 0 ready, 1 failed"
+  },
+  {
+    "t": "Nov 17 18:22",
+    "timestamp": 1794919976.4706159,
+    "a": "Job Started",
+    "d": "Job J-9976 started for session s_9c36... (1 items)"
+  },
+  {
+    "t": "Nov 17 17:27",
+    "timestamp": 1794916622.3445048,
+    "a": "Job Completed",
+    "d": "Job J-6622 finished: 0 ready, 1 failed"
+  },
+  {
+    "t": "Nov 17 17:27",
+    "timestamp": 1794916622.2541912,
+    "a": "Job Stopped",
+    "d": "Job J-6622 stopped by administrator"
+  },
+  {
+    "t": "Nov 17 17:27",
+    "timestamp": 1794916622.1812015,
+    "a": "Job Started",
+    "d": "Job J-6622 started for session s_8399... (1 items)"
+  },
+  {
+    "t": "Nov 17 17:27",
+    "timestamp": 1794916622.1291869,
+    "a": "Admin Signed In",
+    "d": "Successful administrator authentication"
+  },
+  {
+    "t": "Nov 17 17:26",
+    "timestamp": 1794916574.9991484,
+    "a": "Guest Policy Saved",
+    "d": "Updated session lifetimes and rate limits"
+  },
+  {
+    "t": "Nov 17 17:26",
+    "timestamp": 1794916574.9634576,
+    "a": "Guest Policy Saved",
+    "d": "Updated session lifetimes and rate limits"
+  },
+  {
+    "t": "Nov 17 17:26",
+    "timestamp": 1794916574.803818,
+    "a": "Admin Signed In",
+    "d": "Successful administrator authentication"
+  },
+  {
+    "t": "Nov 17 17:25",
+    "timestamp": 1794916540.3253677,
+    "a": "Guest Policy Saved",
+    "d": "Updated session lifetimes and rate limits"
+  },
+  {
+    "t": "Nov 17 17:25",
+    "timestamp": 1794916540.2930725,
+    "a": "Guest Policy Saved",
+    "d": "Updated session lifetimes and rate limits"
+  },
+  {
+    "t": "Nov 17 17:25",
+    "timestamp": 1794916540.0966802,
+    "a": "Admin Signed In",
+    "d": "Successful administrator authentication"
+  },
+  {
+    "t": "Nov 17 17:24",
+    "timestamp": 1794916477.4652503,
+    "a": "Guest Policy Saved",
+    "d": "Updated session lifetimes and rate limits"
+  },
+  {
+    "t": "Nov 17 17:24",
+    "timestamp": 1794916477.4366102,
+    "a": "Guest Policy Saved",
+    "d": "Updated session lifetimes and rate limits"
+  },
+  {
+    "t": "Nov 17 17:24",
+    "timestamp": 1794916477.202765,
+    "a": "Admin Signed In",
+    "d": "Successful administrator authentication"
+  },
+  {
     "t": "Today 10:12",
     "timestamp": 1793795000.0,
     "a": "System Initialized",
